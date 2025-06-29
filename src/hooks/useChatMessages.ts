@@ -19,7 +19,7 @@ export const useChatMessages = (isOpen: boolean) => {
 
     setIsLoading(true);
     try {
-      const newMessages = await getMessages(profile.email);
+      const newMessages = await getMessages();
       if (newMessages && Array.isArray(newMessages)) {
         setMessages(newMessages);
         

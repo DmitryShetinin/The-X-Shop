@@ -1,7 +1,6 @@
 import { Product } from "@/types/product";
 import { getProductsCache, refreshCacheIfNeeded } from "../cache/productCache";
-import { productMergeApi } from "../supabase/productMergeApi";
-import { getProductByIdFromSupabase, fetchProductsFromSupabase } from "../supabaseApi";
+import { getProductByIdFromSQLite, fetchProductsFromSQLite } from "../sqlite/productApi";
 import { getProductById as getProductByIdBase } from "./productServiceBase";
 
 // Import the services
@@ -29,7 +28,7 @@ export const checkProductStock = ProductStockService.checkProductStock;
 export const decreaseProductStock = ProductStockService.decreaseProductStock;
 
 /**
- * Gets a product by ID from cache or Supabase
+ * Gets a product by ID from cache or SQLite
  */
 export const getProductById = async (id: string): Promise<Product | null> => {
   try {
@@ -37,31 +36,18 @@ export const getProductById = async (id: string): Promise<Product | null> => {
     const cachedProducts = getProductsCache();
     let product = cachedProducts.find(p => p.id === id) || null;
     
-    // If not in cache, get directly from Supabase
+    // If not in cache, get directly from SQLite
     if (!product) {
-      product = await getProductByIdFromSupabase(id) || null;
+      product = await getProductByIdFromSQLite(id) || null;
     }
     
     if (!product) {
       return null;
     }
     
-    // If the product has a model name, get all products with the same model name
-    if (product.modelName) {
-      try {
-        const modelProducts = await productMergeApi.getProductsByModelName(product.modelName);
-        
-        if (modelProducts && modelProducts.length > 1) {
-          // Combine all products with the same model name into a single product with variants
-          const combinedProduct = productMergeApi.combineProductVariants(modelProducts);
-          return combinedProduct;
-        }
-      } catch (error) {
-      }
-    }
-    
     return product;
   } catch (error) {
+    console.error('Error getting product by ID:', error);
     return null;
   }
 };

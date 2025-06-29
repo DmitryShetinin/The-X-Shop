@@ -1,19 +1,4 @@
-
-import { 
-  fetchCategoriesFromSupabase, 
-  addCategoryToSupabase, 
-  removeCategoryFromSupabase, 
-  updateProductsCategoryInSupabase,
-  updateCategoryImageInSupabase,
-  getProductsByCategoryFromSupabase,
-  migrateDataToSupabaseIfNeeded
-} from "./supabaseApi";
-
-// Определяем интерфейс для категории
-export interface Category {
-  name: string;
-  imageUrl: string;
-}
+import { Category, fetchCategoriesFromSQLite, addCategoryToSQLite, removeCategoryFromSQLite, updateProductsCategoryInSQLite, updateCategoryImageInSQLite, getProductsByCategoryFromSQLite } from "./sqlite/categoryApi";
 
 // Хранение текущих категорий
 let categories: Category[] = [];
@@ -21,8 +6,8 @@ let categoriesLoaded = false;
 
 // Функция для получения всех уникальных категорий
 export const getAllCategories = async (): Promise<string[]> => {
-  // Всегда обновляем категории из Supabase
-  await loadCategoriesFromSupabase();
+  // Всегда обновляем категории из SQLite
+  await loadCategoriesFromSQLite();
   
   // Возвращаем только имена категорий для совместимости с существующим кодом
   return categories.map(category => category.name);
@@ -30,22 +15,22 @@ export const getAllCategories = async (): Promise<string[]> => {
 
 // Функция для получения объектов категорий
 export const getCategoryObjects = async (): Promise<Category[]> => {
-  // Всегда обновляем категории из Supabase
-  await loadCategoriesFromSupabase();
+  // Всегда обновляем категории из SQLite
+  await loadCategoriesFromSQLite();
   
   return [...categories];
 };
 
-// Функция для загрузки категорий из Supabase
-async function loadCategoriesFromSupabase(): Promise<void> {
+// Функция для загрузки категорий из SQLite
+async function loadCategoriesFromSQLite(): Promise<void> {
   try {
-    // Загружаем категории из Supabase без учета локального кэша
-    const supabaseCategories = await fetchCategoriesFromSupabase();
-    
-    categories = supabaseCategories;
+    // Загружаем категории из SQLite без учета локального кэша
+    const sqliteCategories = await fetchCategoriesFromSQLite();
+   
+    categories = sqliteCategories;
     categoriesLoaded = true;
     
-    console.log("Категории загружены из Supabase:", categories);
+    console.log("Категории загружены из SQLite:", categories);
   } catch (error) {
     console.error("Ошибка при загрузке категорий из базы данных:", error);
     categories = [];
@@ -54,23 +39,23 @@ async function loadCategoriesFromSupabase(): Promise<void> {
 
 // Функция для добавления новой категории
 export const addCategory = async (categoryName: string, imageUrl: string = "/placeholder.svg"): Promise<void> => {
-  // Добавляем категорию в Supabase
-  const added = await addCategoryToSupabase(categoryName, imageUrl);
+  // Добавляем категорию в SQLite
+  const added = await addCategoryToSQLite(categoryName, imageUrl);
   
   if (added) {
     // Перезагружаем категории из базы
-    await loadCategoriesFromSupabase();
+    await loadCategoriesFromSQLite();
   }
 };
 
 // Функция для обновления изображения категории
 export const updateCategoryImage = async (categoryName: string, imageUrl: string): Promise<void> => {
-  // Обновляем изображение в Supabase
-  const updated = await updateCategoryImageInSupabase(categoryName, imageUrl);
+  // Обновляем изображение в SQLite
+  const updated = await updateCategoryImageInSQLite(categoryName, imageUrl);
   
   if (updated) {
     // Перезагружаем категории из базы
-    await loadCategoriesFromSupabase();
+    await loadCategoriesFromSQLite();
   }
 };
 
@@ -81,11 +66,11 @@ export const removeCategory = async (categoryName: string): Promise<boolean> => 
   
   if (productsInCategory.length === 0) {
     // Если категория не используется, удаляем ее
-    const removed = await removeCategoryFromSupabase(categoryName);
+    const removed = await removeCategoryFromSQLite(categoryName);
     
     if (removed) {
       // Перезагружаем категории из базы
-      await loadCategoriesFromSupabase();
+      await loadCategoriesFromSQLite();
       return true;
     }
   }
@@ -95,8 +80,8 @@ export const removeCategory = async (categoryName: string): Promise<boolean> => 
 
 // Функция для обновления продуктов при удалении категории
 export const updateProductsCategory = async (oldCategory: string, newCategory: string): Promise<void> => {
-  // Обновляем категорию для всех продуктов в Supabase
-  const updated = await updateProductsCategoryInSupabase(oldCategory, newCategory);
+  // Обновляем категорию для всех продуктов в SQLite
+  const updated = await updateProductsCategoryInSQLite(oldCategory, newCategory);
   
   if (updated) {
     // Удаляем старую категорию после обновления продуктов
@@ -106,8 +91,8 @@ export const updateProductsCategory = async (oldCategory: string, newCategory: s
 
 // Функция для получения продуктов по категории
 export const getProductsByCategory = async (category: string) => {
-  return await getProductsByCategoryFromSupabase(category);
+  return await getProductsByCategoryFromSQLite(category);
 };
 
 // Загружаем категории при импорте модуля
-loadCategoriesFromSupabase();
+loadCategoriesFromSQLite();

@@ -122,6 +122,9 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+ 
+
+
   // Создаем клиент для React Query с настройками по умолчанию
   const queryClient = new QueryClient({
     defaultOptions: {

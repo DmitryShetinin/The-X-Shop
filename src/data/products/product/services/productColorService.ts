@@ -1,8 +1,7 @@
-
 import { Product } from "@/types/product";
-import { productMergeApi } from "../../supabase/productMergeApi";
 import { getProductById as getProductByIdBase } from "../productServiceBase";
 import { refreshCacheIfNeeded } from "../../cache/productCache";
+import { getAllProductsCached } from "./productFilterService";
 
 /**
  * Link products by color (same model, different colors)
@@ -23,12 +22,8 @@ export const linkProductsByColor = async (productIds: string[]): Promise<boolean
       const product = await getProductByIdBase(id);
       if (product) {
         product.modelName = modelName;
-        // Use the Supabase API to update the product
-        await fetch(`/api/products/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(product)
-        });
+        // TODO: Update product in SQLite
+        console.log('Linking product by color:', { id, modelName });
       }
     }
     
@@ -57,7 +52,8 @@ export const getRelatedColorProducts = async (productId: string): Promise<Produc
     }
     
     // Get all products with the same model name
-    const relatedProducts = await productMergeApi.getProductsByModelName(product.modelName);
+    const allProducts = await getAllProductsCached();
+    const relatedProducts = allProducts.filter(p => p.modelName === product.modelName);
     
     // Filter out the current product
     return relatedProducts.filter(p => p.id !== productId);

@@ -1,14 +1,13 @@
-
 import { Product } from "@/types/product";
 import { 
-  fetchProductsFromSupabase, 
-  getProductByIdFromSupabase, 
-  getProductsByCategoryFromSupabase, 
-  addOrUpdateProductInSupabase, 
-  archiveProductInSupabase, 
-  restoreProductInSupabase, 
-  removeProductFromSupabase 
-} from "../supabaseApi";
+  fetchProductsFromSQLite, 
+  getProductByIdFromSQLite, 
+  getProductsByCategoryFromSQLite, 
+  addOrUpdateProductInSQLite, 
+  archiveProductInSQLite, 
+  restoreProductInSQLite, 
+  removeProductFromSQLite 
+} from "../sqlite/productApi";
 import { refreshCacheIfNeeded, getProductsCache } from "../cache/productCache";
 import { generateRandomRating } from "../utils";
 
@@ -17,7 +16,7 @@ export const getProducts = async (includeArchived = false): Promise<Product[]> =
   try {
     if (includeArchived) {
       // If archived products are needed, load directly from database
-      return await fetchProductsFromSupabase(true);
+      return await fetchProductsFromSQLite();
     }
     
     // Always update cache when requesting products
@@ -59,8 +58,8 @@ export const addOrUpdateProduct = async (product: Product): Promise<boolean> => 
       }
     }
     
-    // Save product to Supabase
-    const result = await addOrUpdateProductInSupabase(product);
+    // Save product to SQLite
+    const result = await addOrUpdateProductInSQLite(product);
     
     if (result.success) {
       // Force refresh cache
@@ -77,7 +76,7 @@ export const addOrUpdateProduct = async (product: Product): Promise<boolean> => 
 // Function to archive product
 export const archiveProduct = async (productId: string): Promise<boolean> => {
   try {
-    const success = await archiveProductInSupabase(productId);
+    const success = await archiveProductInSQLite(productId);
     
     if (success) {
       // Force refresh cache
@@ -94,7 +93,7 @@ export const archiveProduct = async (productId: string): Promise<boolean> => {
 // Function to restore product from archive
 export const restoreProduct = async (productId: string): Promise<boolean> => {
   try {
-    const success = await restoreProductInSupabase(productId);
+    const success = await restoreProductInSQLite(productId);
     
     if (success) {
       // Force refresh cache
@@ -111,7 +110,7 @@ export const restoreProduct = async (productId: string): Promise<boolean> => {
 // Function to remove product
 export const removeProduct = async (productId: string): Promise<boolean> => {
   try {
-    const success = await removeProductFromSupabase(productId);
+    const success = await removeProductFromSQLite(productId);
     
     if (success) {
       // Force refresh cache
@@ -128,7 +127,7 @@ export const removeProduct = async (productId: string): Promise<boolean> => {
 // Function to get product by ID
 export const getProductById = async (id: string): Promise<Product | undefined> => {
   try {
-    return await getProductByIdFromSupabase(id);
+    return await getProductByIdFromSQLite(id);
   } catch (error) {
     console.error("Error getting product by ID:", error);
     return undefined;
@@ -144,7 +143,7 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
       return getProductsCache();
     }
     
-    return await getProductsByCategoryFromSupabase(category);
+    return await getProductsByCategoryFromSQLite(category);
   } catch (error) {
     console.error("Error getting products by category:", error);
     return [];

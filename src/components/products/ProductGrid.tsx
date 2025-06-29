@@ -1,3 +1,4 @@
+ 
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
 import { Button } from "../ui/button";
@@ -10,6 +11,10 @@ interface ProductGridProps {
   showAsColorVariants?: boolean;
   limit?: number;
   showExpand?: boolean;
+    /**
+   * Optional CSS classes to control grid columns layout.
+   * Defaults to showing up to five columns on large screens.
+   */
   columnsClass?: string;
 }
 
@@ -17,14 +22,14 @@ const ProductGrid = ({
   products, 
   title, 
   showAsColorVariants = false, 
-  limit = 2, // Установлено ограничение по умолчанию до 2 карточек
+  limit,
   showExpand = false,
   columnsClass
 }: ProductGridProps) => {
   const [expanded, setExpanded] = useState(false);
   
   const displayProducts = useMemo(() => {
-    if (expanded) {
+    if (!limit || expanded) {
       return products;
     }
     return products.slice(0, limit);
@@ -55,7 +60,7 @@ const ProductGrid = ({
         ))}
       </div>
       
-      {showExpand && products.length > limit && (
+      {showExpand && limit && products.length > limit && (
         <div className="text-center mt-8">
           <Button 
             variant="outline" 

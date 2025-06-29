@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const SupabaseClient      = require('./lib/supabaseClient.cjs');
+const SQLiteDatabase      = require('../src/data/sqlite/database');
 const StaticPageGenerator = require('./lib/staticPageGenerator.cjs');
 const SitemapGenerator    = require('./lib/sitemapGenerator.cjs');
 
@@ -8,7 +8,7 @@ const SitemapGenerator    = require('./lib/sitemapGenerator.cjs');
 async function generateStaticPages() {
   try {
     // Инициализация сервисов
-    const supabaseClient = new SupabaseClient();
+    const SQLiteClient = new SQLiteDatabase();
     const pageGenerator = new StaticPageGenerator();
     const sitemapGenerator = new SitemapGenerator();
     
@@ -21,8 +21,8 @@ async function generateStaticPages() {
     }
     
     // Получаем товары из Supabase
-    const products = await supabaseClient.getProducts();
-    
+    const products = await SQLiteClient.getProducts();
+   
     if (!products || products.length === 0) {
       return;
     }

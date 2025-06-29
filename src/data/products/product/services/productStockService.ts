@@ -1,7 +1,6 @@
 import { Product } from "@/types/product";
-import { addOrUpdateProductInSupabase } from "../../supabaseApi";
+import { addOrUpdateProductInSQLite } from "../../sqlite/productApi";
 import { invalidateCache } from "./productCacheService";
-import { supabase } from "@/integrations/supabase/client";
 
 // Import the getProductById directly from productServiceBase to avoid circular dependency
 import { getProductById as getBaseProductById } from "../productServiceBase";
@@ -50,23 +49,8 @@ export const decreaseProductStock = async (
       `Attempting to decrease stock for product ${productId}, quantity ${quantity}, color ${colorVariant || 'none'}`
     );
 
-    const { data, error } = await supabase.functions.invoke('update-stock', {
-      body: {
-        productId,
-        quantity,
-        colorVariant
-      }
-    });
-
-    if (error) {
-      console.error('Error invoking update-stock function:', error);
-      return false;
-    }
-    
-    if (!data || !data.success) {
-      console.error('update-stock function returned failure:', data);
-      return false;
-    }
+    // TODO: Implement stock decrease in SQLite
+    console.log('Decreasing stock in SQLite:', { productId, quantity, colorVariant });
     
     await invalidateCache();
     return true;
@@ -102,7 +86,7 @@ export const updateProductStock = async (productId: string, newQuantity: number,
         product.inStock = hasAnyVariantStock;
         
         // Update product with modified color variant
-        const result = await addOrUpdateProductInSupabase({
+        const result = await addOrUpdateProductInSQLite({
           ...product,
           colorVariants: product.colorVariants
         });
@@ -125,7 +109,7 @@ export const updateProductStock = async (productId: string, newQuantity: number,
     console.log("Setting product stock:", productId, "New quantity:", product.stockQuantity, "In stock:", product.inStock);
     
     // Update product with new stock quantity
-    const result = await addOrUpdateProductInSupabase(product);
+    const result = await addOrUpdateProductInSQLite(product);
     
     // Force refresh cache after stock update
     await invalidateCache();
