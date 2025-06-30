@@ -67,7 +67,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const selectedColorVariant = selectedColor && currentProduct.colorVariants 
     ? currentProduct.colorVariants.find(v => v.color === selectedColor)
     : undefined;
-
+   
+  console.log("11111111111")
+  console.log(product);
   return (
     <div className={`group relative bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 ${className}`}
          itemScope itemType="https://schema.org/Product">
@@ -78,11 +80,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <meta itemProp="category" content={product.category} />
       <meta itemProp="brand" content="The X Shop" />
       <meta itemProp="sku" content={product.articleNumber || product.id} />
-      
+ 
       <Link to={`/product/${product.id}`} className="block" itemProp="url">
         <AspectRatio ratio={compact ? 1 : 3/4} className="overflow-hidden rounded-t-lg bg-gray-50">
           <img
-            src={currentProduct.imageUrl}
+            src={`/images/${product.image_url}`}
             alt={product.title}
             className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-200"
             loading="lazy"
