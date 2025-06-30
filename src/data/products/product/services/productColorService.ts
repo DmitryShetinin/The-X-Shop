@@ -1,6 +1,6 @@
 import { Product } from "@/types/product";
-import { getProductById as getProductByIdBase } from "../productServiceBase";
-import { refreshCacheIfNeeded } from "../../cache/productCache";
+import { getProductById } from "../productServiceSpecialized";
+import { invalidateCache } from "../../cache/productCache";
 import { getAllProductsCached } from "./productFilterService";
 
 /**
@@ -19,16 +19,16 @@ export const linkProductsByColor = async (productIds: string[]): Promise<boolean
     
     // Update each product with the same model name
     for (const id of productIds) {
-      const product = await getProductByIdBase(id);
+      const product = await getProductById(id);
       if (product) {
         product.modelName = modelName;
-        // TODO: Update product in SQLite
+        // TODO: Update product in database
         console.log('Linking product by color:', { id, modelName });
       }
     }
     
     // Invalidate cache to reflect changes
-    await refreshCacheIfNeeded(true);
+    invalidateCache();
     
     return true;
   } catch (error) {
@@ -44,8 +44,7 @@ export const linkProductsByColor = async (productIds: string[]): Promise<boolean
  */
 export const getRelatedColorProducts = async (productId: string): Promise<Product[]> => {
   try {
-    // Use the import to avoid circular dependencies
-    const product = await import("../productServiceSpecialized").then(module => module.getProductById(productId));
+    const product = await getProductById(productId);
     
     if (!product || !product.modelName) {
       return [];

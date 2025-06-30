@@ -106,9 +106,9 @@ const Cart = () => {
     
     try {
       // Process the order
-       console.log("loccc 1")
+ 
       const result = await placeOrder(orderData);
-      console.log("loccc 11")
+ 
       if (result.success) {
         handleSuccessfulOrder(result);
       } else {
@@ -131,7 +131,7 @@ const Cart = () => {
   };
 
   const handleSuccessfulOrder = (result) => {
-    console.log("loccc 2")
+  
     toast({
       title: "Успешно",
       description: "Заказ успешно оформлен! Спасибо за покупку.",
@@ -144,7 +144,7 @@ const Cart = () => {
     //     description: "Мы создали аккаунт для вас. Проверьте вашу почту для получения пароля и инструкций.",
     //   });
     // }
-    console.log("loccc 3 ")
+ 
     // Clear the cart after successful order
     clearCart();
     sendOrderNotification(result)

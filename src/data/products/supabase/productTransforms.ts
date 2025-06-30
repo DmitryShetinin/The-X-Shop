@@ -105,6 +105,7 @@ export const transformSupabaseToProduct = (supabaseProduct: any): Product => {
     videoType: supabaseProduct.video_type as 'mp4' | 'vk' | 'youtube' || undefined,
     rating: Number(supabaseProduct.rating) || 4.8,
     inStock: Boolean(supabaseProduct.in_stock),
+    in_stock: Boolean(supabaseProduct.in_stock),
     colors: colors,
     sizes: sizes,
     countryOfOrigin: supabaseProduct.country_of_origin || 'Россия',

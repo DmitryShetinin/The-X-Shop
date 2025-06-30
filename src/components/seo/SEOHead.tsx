@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
@@ -30,6 +29,10 @@ export const SEOHead: React.FC<SEOProps> = ({
   const fullUrl = canonicalUrl || `${domain}${currentPath}`;
   const fullTitle = title ? `${title} | The X Shop` : 'The X Shop';
   
+  // Безопасная обработка ogImage
+  const safeOgImage = ogImage || '/lovable-uploads/20f4bfd6-6f1c-40b7-9d9c-9b1be8939979.png';
+  const fullOgImage = safeOgImage && typeof safeOgImage === 'string' && safeOgImage.startsWith('http') ? safeOgImage : `${domain}${safeOgImage}`;
+  
   return (
     <Helmet>
       {/* Базовые мета-теги */}
@@ -48,14 +51,14 @@ export const SEOHead: React.FC<SEOProps> = ({
       <meta property="og:description" content={description} />
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={fullUrl} />
-      <meta property="og:image" content={ogImage.startsWith('http') ? ogImage : `${domain}${ogImage}`} />
+      <meta property="og:image" content={fullOgImage} />
       <meta property="og:site_name" content="The X Shop" />
       
       {/* Twitter мета-теги */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage.startsWith('http') ? ogImage : `${domain}${ogImage}`} />
+      <meta name="twitter:image" content={fullOgImage} />
       
       {/* Указания для индексации */}
       {noindex ? (

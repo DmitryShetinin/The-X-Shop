@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from "@/types/product";
 import ImageGallery from "@/components/products/ImageGallery";
 import ProductVideo from "@/components/products/ProductVideo";
@@ -8,7 +8,8 @@ import StockStatus from "@/components/products/StockStatus";
 import ColorSelection from "@/components/products/ColorSelection";
 import QuantitySelector from "@/components/products/QuantitySelector";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface ProductDetailsSectionProps {
   product: Product;
@@ -17,7 +18,7 @@ interface ProductDetailsSectionProps {
   hasStock: boolean;
   displayArticleNumber?: string;
   onColorChange: (color: string) => void;
-  onAddToCart: () => void;
+  onAddToCart: () => Promise<void>;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
 }
@@ -33,6 +34,7 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   quantity,
   onQuantityChange
 }) => {
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const selectedColorVariant = product?.colorVariants?.find(
     v => v.color === selectedColor
   );
@@ -45,6 +47,17 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
       }
     }
     return product?.imageUrl || "";
+  };
+
+  const handleAddToCart = async () => {
+    if (!hasStock || isAddingToCart) return;
+    
+    setIsAddingToCart(true);
+    try {
+      await onAddToCart();
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   return (
@@ -117,16 +130,32 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         />
 
         {/* Add to cart button */}
-        <div className="pt-4">
+        <div className="pt-4 space-y-3">
           <Button 
             size="lg" 
             className="w-full"
-            onClick={onAddToCart}
-            disabled={!hasStock}
+            onClick={handleAddToCart}
+            disabled={!hasStock || isAddingToCart}
           >
-            <ShoppingCart className="mr-2 h-5 w-5" />
-            {hasStock ? `Купить за ${displayPrice} ₽` : "Нет в наличии"}
+            {isAddingToCart ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Добавляем в корзину...
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                {hasStock ? `Добавить в корзину за ${formatPrice(displayPrice)}` : "Нет в наличии"}
+              </>
+            )}
           </Button>
+          
+          {hasStock && (
+            <div className="text-sm text-muted-foreground text-center">
+              {quantity > 1 ? `Будет добавлено ${quantity} шт.` : "Будет добавлено 1 шт."}
+              {selectedColor && ` (${selectedColor})`}
+            </div>
+          )}
         </div>
       </div>
     </div>

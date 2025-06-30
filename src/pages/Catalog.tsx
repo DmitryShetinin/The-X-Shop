@@ -105,8 +105,8 @@ const Catalog = () => {
     setPriceRange((prev) => ({ ...prev, [type]: numValue }));
   };
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {

@@ -1,15 +1,14 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Product, ColorVariant } from "@/types/product";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart } from "lucide-react";
 import ProductColorOptions from "./ProductColorOptions";
 import MarketplaceLinks from "./MarketplaceLinks";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import AddToCartButton from "./AddToCartButton";
 
 interface ProductCardProps {
   product: Product;
@@ -30,27 +29,44 @@ const ProductCard: React.FC<ProductCardProps> = ({
   compact = false,
   cartAvailable = true
 }) => {
-  const { addItem } = useCart();
   const { isInWishlist, toggleWishlistItem } = useWishlist();
-
-  const handleAddToCart = () => {
-    const selectedVariant = selectedColor && currentProduct.colorVariants 
-      ? currentProduct.colorVariants.find(v => v.color === selectedColor)
-      : undefined;
-
-    addItem({
-      product: currentProduct,
-      quantity: 1,
-      color: selectedColor,
-      selectedColorVariant: selectedVariant
-    });
-  };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     toggleWishlistItem(product);
   };
+
+  // Проверка наличия товара на основе in_stock
+  const isInStock = () => {
+    // Если выбран цвет и есть цветовые варианты, проверяем stockQuantity варианта
+    if (selectedColor && currentProduct.colorVariants?.length) {
+      const variant = currentProduct.colorVariants.find(v => v.color === selectedColor);
+      if (variant) {
+        // Если у варианта есть stockQuantity, используем его
+        if (variant.stockQuantity !== undefined && variant.stockQuantity !== null) {
+          return variant.stockQuantity > 0;
+        }
+        // Иначе используем in_stock основного товара
+        return Boolean(currentProduct.in_stock);
+      }
+    }
+    
+    // Если у основного товара есть stockQuantity, используем его
+    if (currentProduct.stockQuantity !== undefined && currentProduct.stockQuantity !== null) {
+      return currentProduct.stockQuantity > 0;
+    }
+    
+    // Fallback к in_stock флагу (основной источник данных о наличии)
+    return Boolean(currentProduct.in_stock);
+  };
+
+  const stockStatus = isInStock();
+
+  // Получаем выбранный цветовой вариант
+  const selectedColorVariant = selectedColor && currentProduct.colorVariants 
+    ? currentProduct.colorVariants.find(v => v.color === selectedColor)
+    : undefined;
 
   return (
     <div className={`group relative bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 ${className}`}
@@ -106,7 +122,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {/* Price with structured data */}
         <div className="flex items-center gap-2 mb-3" itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <meta itemProp="priceCurrency" content="RUB" />
-          <link itemProp="availability" href={currentProduct.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"} />
+          <link itemProp="availability" href={stockStatus ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"} />
           <meta itemProp="url" content={`https://the-x.shop/product/${product.id}`} />
           
           {currentProduct.discountPrice ? (
@@ -128,11 +144,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {/* Stock Status */}
         {!compact && (
           <div className={`text-xs font-medium mb-3 ${
-            currentProduct.stockQuantity && currentProduct.stockQuantity > 0 
-              ? "text-green-600" 
-              : "text-red-500"
+            stockStatus ? "text-green-600" : "text-red-500"
           }`}>
-            {currentProduct.stockQuantity && currentProduct.stockQuantity > 0 ? "В наличии" : "Нет в наличии"}
+            {stockStatus ? "В наличии" : "Нет в наличии"}
           </div>
         )}
 
@@ -147,19 +161,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* Add to Cart Button */}
-        {cartAvailable && (
-          <Button
-            onClick={handleAddToCart}
-            disabled={!currentProduct.inStock || (currentProduct.stockQuantity !== undefined && currentProduct.stockQuantity <= 0)}
-            className="w-full"
-            size={compact ? "sm" : "sm"}
-          >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            В корзину
-          </Button>
-        )}
-        
-        {!cartAvailable && (
+        {cartAvailable ? (
+          <AddToCartButton
+            product={currentProduct}
+            selectedColor={selectedColor}
+            selectedColorVariant={selectedColorVariant}
+            compact={compact}
+          />
+        ) : (
           <Link to={`/product/${product.id}`}>
             <Button className="w-full" size={compact ? "sm" : "sm"} variant="outline">
               Подробнее
@@ -171,4 +180,4 @@ const ProductCard: React.FC<ProductCardProps> = ({
   );
 };
 
-export default ProductCard;
+export default ProductCard; 

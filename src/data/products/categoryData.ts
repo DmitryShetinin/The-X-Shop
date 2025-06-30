@@ -1,4 +1,7 @@
-import { Category, fetchCategoriesFromSQLite, addCategoryToSQLite, removeCategoryFromSQLite, updateProductsCategoryInSQLite, updateCategoryImageInSQLite, getProductsByCategoryFromSQLite } from "./sqlite/categoryApi";
+// Импортируем тип Category из index.ts
+import { Category } from './index';
+import { fetchCategoriesFromPostgres } from "./postgres/categoryApi";
+import { getProductsByCategoryFromPostgres } from "./postgres/productApi";
 
 // Хранение текущих категорий
 let categories: Category[] = [];
@@ -6,8 +9,8 @@ let categoriesLoaded = false;
 
 // Функция для получения всех уникальных категорий
 export const getAllCategories = async (): Promise<string[]> => {
-  // Всегда обновляем категории из SQLite
-  await loadCategoriesFromSQLite();
+  // Всегда обновляем категории из PostgreSQL
+  await loadCategoriesFromPostgres();
   
   // Возвращаем только имена категорий для совместимости с существующим кодом
   return categories.map(category => category.name);
@@ -15,48 +18,44 @@ export const getAllCategories = async (): Promise<string[]> => {
 
 // Функция для получения объектов категорий
 export const getCategoryObjects = async (): Promise<Category[]> => {
-  // Всегда обновляем категории из SQLite
-  await loadCategoriesFromSQLite();
+  // Всегда обновляем категории из PostgreSQL
+  await loadCategoriesFromPostgres();
   
   return [...categories];
 };
 
-// Функция для загрузки категорий из SQLite
-async function loadCategoriesFromSQLite(): Promise<void> {
+// Функция для загрузки категорий из PostgreSQL
+async function loadCategoriesFromPostgres(): Promise<void> {
   try {
-    // Загружаем категории из SQLite без учета локального кэша
-    const sqliteCategories = await fetchCategoriesFromSQLite();
+    // Загружаем категории из PostgreSQL без учета локального кэша
+    const postgresCategories = await fetchCategoriesFromPostgres();
    
-    categories = sqliteCategories;
+    categories = postgresCategories;
     categoriesLoaded = true;
     
-    console.log("Категории загружены из SQLite:", categories);
+    console.log("Категории загружены из PostgreSQL:", categories);
   } catch (error) {
-    console.error("Ошибка при загрузке категорий из базы данных:", error);
+    console.error("Ошибка при загрузке категорий из PostgreSQL:", error);
     categories = [];
   }
 }
 
 // Функция для добавления новой категории
 export const addCategory = async (categoryName: string, imageUrl: string = "/placeholder.svg"): Promise<void> => {
-  // Добавляем категорию в SQLite
-  const added = await addCategoryToSQLite(categoryName, imageUrl);
+  // TODO: Реализовать добавление категории в PostgreSQL
+  console.log("Добавление категории в PostgreSQL:", categoryName, imageUrl);
   
-  if (added) {
-    // Перезагружаем категории из базы
-    await loadCategoriesFromSQLite();
-  }
+  // Перезагружаем категории из базы
+  await loadCategoriesFromPostgres();
 };
 
 // Функция для обновления изображения категории
 export const updateCategoryImage = async (categoryName: string, imageUrl: string): Promise<void> => {
-  // Обновляем изображение в SQLite
-  const updated = await updateCategoryImageInSQLite(categoryName, imageUrl);
+  // TODO: Реализовать обновление изображения в PostgreSQL
+  console.log("Обновление изображения категории в PostgreSQL:", categoryName, imageUrl);
   
-  if (updated) {
-    // Перезагружаем категории из базы
-    await loadCategoriesFromSQLite();
-  }
+  // Перезагружаем категории из базы
+  await loadCategoriesFromPostgres();
 };
 
 // Функция для удаления категории
@@ -65,34 +64,30 @@ export const removeCategory = async (categoryName: string): Promise<boolean> => 
   const productsInCategory = await getProductsByCategory(categoryName);
   
   if (productsInCategory.length === 0) {
-    // Если категория не используется, удаляем ее
-    const removed = await removeCategoryFromSQLite(categoryName);
+    // TODO: Реализовать удаление категории в PostgreSQL
+    console.log("Удаление категории из PostgreSQL:", categoryName);
     
-    if (removed) {
-      // Перезагружаем категории из базы
-      await loadCategoriesFromSQLite();
-      return true;
-    }
+    // Перезагружаем категории из базы
+    await loadCategoriesFromPostgres();
+    return true;
   }
   
-  return false; // Если категория используется или не удалось удалить
+  return false; // Если категория используется
 };
 
 // Функция для обновления продуктов при удалении категории
 export const updateProductsCategory = async (oldCategory: string, newCategory: string): Promise<void> => {
-  // Обновляем категорию для всех продуктов в SQLite
-  const updated = await updateProductsCategoryInSQLite(oldCategory, newCategory);
+  // TODO: Реализовать обновление категории продуктов в PostgreSQL
+  console.log("Обновление категории продуктов в PostgreSQL:", oldCategory, "->", newCategory);
   
-  if (updated) {
-    // Удаляем старую категорию после обновления продуктов
-    await removeCategory(oldCategory);
-  }
+  // Удаляем старую категорию после обновления продуктов
+  await removeCategory(oldCategory);
 };
 
 // Функция для получения продуктов по категории
 export const getProductsByCategory = async (category: string) => {
-  return await getProductsByCategoryFromSQLite(category);
+  return await getProductsByCategoryFromPostgres(category);
 };
 
 // Загружаем категории при импорте модуля
-loadCategoriesFromSQLite();
+loadCategoriesFromPostgres();

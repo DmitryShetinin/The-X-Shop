@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Product } from "@/types/product";
 import ProductMicrodata from "@/components/seo/ProductMicrodata";
@@ -15,7 +14,7 @@ interface ProductDetailContainerProps {
   hasStock: boolean;
   displayArticleNumber?: string;
   onColorChange: (color: string) => void;
-  onAddToCart: () => void;
+  onAddToCart: () => Promise<void>;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
   currentProductId?: string;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Product, ColorVariant } from "@/types/product";
 import { formatPrice } from "@/lib/utils";
@@ -79,10 +78,12 @@ const ProductInfo = ({ product, selectedColorVariant: propSelectedColorVariant =
     }
   };
   
-  // Проверяем доступность товара на основе stockQuantity
+  // Проверяем доступность товара на основе in_stock
   const isProductAvailable = selectedColorVariant 
     ? (selectedColorVariant.stockQuantity || 0) > 0
-    : product.stockQuantity !== undefined ? product.stockQuantity > 0 : product.inStock;
+    : (product.stockQuantity !== undefined && product.stockQuantity !== null) 
+      ? product.stockQuantity > 0 
+      : Boolean(product.in_stock);
 
   return (
     <div>

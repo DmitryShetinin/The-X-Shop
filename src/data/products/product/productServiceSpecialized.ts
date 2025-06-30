@@ -1,7 +1,5 @@
 import { Product } from "@/types/product";
-import { getProductsCache, refreshCacheIfNeeded } from "../cache/productCache";
-import { getProductByIdFromSQLite, fetchProductsFromSQLite } from "../sqlite/productApi";
-import { getProductById as getProductByIdBase } from "./productServiceBase";
+ 
 
 // Import the services
 import * as ProductCacheService from "./services/productCacheService";
@@ -27,27 +25,33 @@ export const getRelatedProducts = ProductFilterService.getRelatedProducts;
 export const checkProductStock = ProductStockService.checkProductStock;
 export const decreaseProductStock = ProductStockService.decreaseProductStock;
 
+const API_BASE_URL = 'http://localhost:3001/api';
+
 /**
- * Gets a product by ID from cache or SQLite
+ * Gets a product by ID from API
  */
 export const getProductById = async (id: string): Promise<Product | null> => {
   try {
-    // First try to get from cache
-    const cachedProducts = getProductsCache();
-    let product = cachedProducts.find(p => p.id === id) || null;
+    console.log(`🔍 getProductById: Loading product with ID ${id} from API`);
     
-    // If not in cache, get directly from SQLite
-    if (!product) {
-      product = await getProductByIdFromSQLite(id) || null;
+    const response = await fetch(`${API_BASE_URL}/products/${id}`);
+ 
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.log(`❌ getProductById: Product with ID ${id} not found`);
+        return null;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    if (!product) {
-      return null;
-    }
+    const product = await response.json();
+ 
+    console.log(`✅ getProductById: Loaded product "${product.title}" from API`);
     
     return product;
   } catch (error) {
-    console.error('Error getting product by ID:', error);
+    console.error('❌ getProductById: Error loading product from API:', error);
+    
     return null;
   }
 };

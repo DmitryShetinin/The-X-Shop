@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Product } from "@/types/product";
 
@@ -17,8 +16,17 @@ export const getYandexMetaTags = (
   hasStock?: boolean,
   displayArticleNumber?: string
 ) => {
+  // Проверяем, что product существует
+  if (!product) {
+    return [];
+  }
+  
   const baseUrl = 'https://the-x.shop';
   const productUrl = `${baseUrl}/product/${product.id}`;
+  
+  // Безопасная обработка imageUrl с дополнительной проверкой
+  const imageUrl = product?.imageUrl || '/placeholder.svg';
+  const fullImageUrl = imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http') ? imageUrl : `${baseUrl}${imageUrl}`;
   
   return [
     { name: "yandex-verification", content: "товар" },
@@ -31,7 +39,7 @@ export const getYandexMetaTags = (
     { property: "og:type", content: "product" },
     { property: "og:title", content: `${product.title} - The X Shop` },
     { property: "og:description", content: product.description || `${product.title} - купить в The X Shop. Доставка по всей России.` },
-    { property: "og:image", content: product.imageUrl.startsWith('http') ? product.imageUrl : `${baseUrl}${product.imageUrl}` },
+    { property: "og:image", content: fullImageUrl },
     { property: "og:url", content: productUrl },
     { property: "og:site_name", content: "The X Shop" },
     { property: "product:category", content: product.category },
@@ -48,4 +56,4 @@ const YandexMicrodata: React.FC<YandexMicrodataProps> = ({
   return null; // Этот компонент теперь только экспортирует утилиты
 };
 
-export default YandexMicrodata;
+export default YandexMicrodata; 

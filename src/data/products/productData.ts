@@ -24,8 +24,5 @@ export {
   decreaseProductStock,
 } from './product/productServiceSpecialized';
 
-// Re-export from SQLite product API
-export * from './sqlite/productApi';
-
 // Export the getProductPrice function from utils 
 export { getProductPrice } from '@/lib/utils';

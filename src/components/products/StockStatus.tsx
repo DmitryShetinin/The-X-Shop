@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Product } from "@/types/product";
 
@@ -16,18 +15,21 @@ const StockStatus: React.FC<StockStatusProps> = ({ product, selectedColor, hasSt
     if (selectedColor && product.colorVariants?.length) {
       const variant = product.colorVariants.find(v => v.color === selectedColor);
       if (variant) {
-        const variantStock = variant.stockQuantity || 0;
+        const variantStock = variant.stockQuantity !== null && variant.stockQuantity !== undefined 
+          ? Number(variant.stockQuantity) || 0 
+          : 0;
         return variantStock > 0 ? "В наличии" : "Нет в наличии";
       }
     }
     
-    // Check main product stock quantity
-    if (product.stockQuantity !== undefined) {
-      return product.stockQuantity > 0 ? "В наличии" : "Нет в наличии";
+    // Check main product stock quantity with safe conversion
+    if (product.stockQuantity !== null && product.stockQuantity !== undefined) {
+      const stockQty = Number(product.stockQuantity);
+      return !isNaN(stockQty) && stockQty > 0 ? "В наличии" : "Нет в наличии";
     }
     
-    // Fallback to hasStock prop or inStock flag
-    return hasStock || product.inStock ? "В наличии" : "Нет в наличии";
+    // Fallback to hasStock prop or in_stock flag (основной источник данных)
+    return hasStock || Boolean(product.in_stock) ? "В наличии" : "Нет в наличии";
   };
 
   const getStockStatusClass = () => {
@@ -37,18 +39,21 @@ const StockStatus: React.FC<StockStatusProps> = ({ product, selectedColor, hasSt
     if (selectedColor && product.colorVariants?.length) {
       const variant = product.colorVariants.find(v => v.color === selectedColor);
       if (variant) {
-        const variantStock = variant.stockQuantity || 0;
+        const variantStock = variant.stockQuantity !== null && variant.stockQuantity !== undefined 
+          ? Number(variant.stockQuantity) || 0 
+          : 0;
         return variantStock > 0 ? "text-green-600" : "text-red-500";
       }
     }
     
-    // Check main product stock quantity
-    if (product.stockQuantity !== undefined) {
-      return product.stockQuantity > 0 ? "text-green-600" : "text-red-500";
+    // Check main product stock quantity with safe conversion
+    if (product.stockQuantity !== null && product.stockQuantity !== undefined) {
+      const stockQty = Number(product.stockQuantity);
+      return !isNaN(stockQty) && stockQty > 0 ? "text-green-600" : "text-red-500";
     }
     
-    // Fallback to hasStock prop or inStock flag
-    return hasStock || product.inStock ? "text-green-600" : "text-red-500";
+    // Fallback to hasStock prop or in_stock flag (основной источник данных)
+    return hasStock || Boolean(product.in_stock) ? "text-green-600" : "text-red-500";
   };
 
   return (
