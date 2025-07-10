@@ -71,7 +71,7 @@ const OrderSummary = ({
     if (savedInfoString) {
       setHasSavedInfo(true);
     }
- 
+    
     // Auto-populate with profile data if available
     if (profile) {
       setOrderForm(prev => ({
@@ -156,7 +156,6 @@ const OrderSummary = ({
   const saveCheckoutInfo = () => {
     try {
       localStorage.setItem("savedCheckoutInfo", JSON.stringify(orderForm));
-   
       toast({
         title: "Информация сохранена",
         description: "Данные о доставке сохранены для будущих заказов"

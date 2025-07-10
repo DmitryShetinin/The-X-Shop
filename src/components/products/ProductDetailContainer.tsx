@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Product } from "@/types/product";
 import ProductMicrodata from "@/components/seo/ProductMicrodata";
@@ -14,7 +15,7 @@ interface ProductDetailContainerProps {
   hasStock: boolean;
   displayArticleNumber?: string;
   onColorChange: (color: string) => void;
-  onAddToCart: () => Promise<void>;
+  onAddToCart: () => void;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
   currentProductId?: string;
@@ -33,12 +34,13 @@ const ProductDetailContainer: React.FC<ProductDetailContainerProps> = ({
   onQuantityChange,
   currentProductId
 }) => {
+  console.log(product)
   return (
     <main className="flex-grow container px-4 py-8 md:px-6" itemScope itemType="https://schema.org/Product">
       {/* Основные Schema.org атрибуты для товара */}
       <meta itemProp="name" content={product.title} />
       <meta itemProp="description" content={product.description || product.title} />
-      <meta itemProp="image" content={product.imageUrl} />
+      <meta itemProp="image" content={`/images/${product.imageUrl}` || 'not-found.jpg'} />
       <meta itemProp="sku" content={displayArticleNumber || product.id} />
       <meta itemProp="mpn" content={displayArticleNumber || product.id} />
       <meta itemProp="category" content={product.category} />

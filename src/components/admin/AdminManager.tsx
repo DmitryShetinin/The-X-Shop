@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card"; 
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ const AdminManager = () => {
       
       return profileData;
     } catch (error) {
+      console.error('Error checking user:', error);
       toast.error('Ошибка при проверке пользователя');
       return null;
     } finally {
@@ -84,6 +86,7 @@ const AdminManager = () => {
         });
 
       if (error) {
+        console.error('Error adding admin:', error);
         toast.error('Ошибка при назначении прав администратора');
         return;
       }
@@ -91,6 +94,7 @@ const AdminManager = () => {
       toast.success('Права администратора успешно предоставлены');
       setSearchResult({ ...searchResult!, isAdmin: true });
     } catch (error) {
+      console.error('Error adding admin:', error);
       toast.error('Ошибка при назначении прав администратора');
     } finally {
       setLoading(false);
@@ -133,6 +137,7 @@ const AdminManager = () => {
         .eq('role', 'admin');
 
       if (error) {
+        console.error('Error removing admin:', error);
         toast.error('Ошибка при удалении прав администратора');
         return;
       }
@@ -140,6 +145,7 @@ const AdminManager = () => {
       toast.success('Права администратора успешно удалены');
       setSearchResult({ ...searchResult!, isAdmin: false });
     } catch (error) {
+      console.error('Error removing admin:', error);
       toast.error('Ошибка при удалении прав администратора');
     } finally {
       setLoading(false);
@@ -159,6 +165,7 @@ const AdminManager = () => {
           .single();
 
         if (profileError || !profileData) {
+          console.log('vipregitrator@gmail.com account not found, cannot add admin rights yet');
           return;
         }
 
@@ -181,10 +188,13 @@ const AdminManager = () => {
             });
 
           if (error) {
+            console.error('Error adding vipregitrator as admin:', error);
           } else {
+            console.log('Successfully added vipregitrator@gmail.com as admin');
           }
         }
       } catch (error) {
+        console.error('Error setting up vipregitrator admin:', error);
       }
     };
 

@@ -1,8 +1,10 @@
+
 import * as XLSX from 'xlsx';
 import { Product } from '@/types/product';
 
 // Convert products array to Excel workbook
 export const productsToExcel = (products: Product[]): XLSX.WorkBook => {
+  console.log("Converting products to Excel format...", products.length);
   
   // Create a simplified array for export (excluding complex nested properties)
   const exportData = products.map(product => ({
@@ -74,6 +76,7 @@ export const workbookToBlob = (workbook: XLSX.WorkBook): Blob => {
 
 // Helper to download an Excel file
 export const downloadExcelFile = (blob: Blob, filename: string): void => {
+  console.log("Downloading Excel file:", filename);
   
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -86,4 +89,5 @@ export const downloadExcelFile = (blob: Blob, filename: string): void => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
   
+  console.log("Excel file download initiated");
 };

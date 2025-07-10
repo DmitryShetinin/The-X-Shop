@@ -1,3 +1,4 @@
+
 /**
  * Утилиты для работы с платежной системой Мир
  * 
@@ -28,6 +29,8 @@ export interface MirPaymentResponse {
  * @returns Информация об инициализированном платеже
  */
 export const initMirPayment = async (paymentData: MirPaymentForm): Promise<MirPaymentResponse> => {
+  console.log("Инициализация платежа через систему Мир", paymentData);
+  
   // Имитация задержки запроса к API
   await new Promise(resolve => setTimeout(resolve, 1000));
   
@@ -48,6 +51,8 @@ export const initMirPayment = async (paymentData: MirPaymentForm): Promise<MirPa
  * @returns Статус платежа
  */
 export const checkMirPaymentStatus = async (orderId: string): Promise<string> => {
+  console.log("Проверка статуса платежа через систему Мир", orderId);
+  
   // Имитация задержки запроса к API
   await new Promise(resolve => setTimeout(resolve, 800));
   
@@ -66,6 +71,8 @@ export const checkMirPaymentStatus = async (orderId: string): Promise<string> =>
  * @returns Токен сохраненной карты
  */
 export const createMirCardToken = async (cardNumber: string): Promise<string> => {
+  console.log("Создание токена карты Мир", cardNumber);
+  
   // Имитация задержки запроса к API
   await new Promise(resolve => setTimeout(resolve, 600));
   
@@ -92,6 +99,7 @@ export const createMirPaymentForm = async (
     onError?: (error: any) => void;
   }
 ): Promise<boolean> => {
+  console.log("Создание платежной формы МИР", options);
   
   // Демонстрационная реализация для отображения формы
   container.innerHTML = `

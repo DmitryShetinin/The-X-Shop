@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Product, ColorVariant } from "@/types/product";
@@ -88,21 +89,11 @@ const ProductCardFull: React.FC<ProductCardFullProps> = ({
 
         {/* Stock Status */}
         <div className={`text-xs font-medium mb-3 ${
-          (() => {
-            if (currentProduct.stockQuantity !== null && currentProduct.stockQuantity !== undefined) {
-              const stockQty = Number(currentProduct.stockQuantity);
-              return !isNaN(stockQty) && stockQty > 0;
-            }
-            return Boolean(currentProduct.inStock);
-          })() ? "text-green-600" : "text-red-500"
+          currentProduct.stockQuantity && currentProduct.stockQuantity > 0 
+            ? "text-green-600" 
+            : "text-red-500"
         }`}>
-          {(() => {
-            if (currentProduct.stockQuantity !== null && currentProduct.stockQuantity !== undefined) {
-              const stockQty = Number(currentProduct.stockQuantity);
-              return !isNaN(stockQty) && stockQty > 0;
-            }
-            return Boolean(currentProduct.inStock);
-          })() ? "В наличии" : "Нет в наличии"}
+          {currentProduct.stockQuantity && currentProduct.stockQuantity > 0 ? "В наличии" : "Нет в наличии"}
         </div>
 
         {/* Marketplace Links */}

@@ -37,7 +37,7 @@ export async function getOrdersByUserId(userId: string) {
       console.error('Error fetching user orders:', error);
       return { success: false, error };
     }
-  
+
     console.log(`Found ${data?.length || 0} orders for user ID: ${userId}`);
     return { success: true, orders: data };
   } catch (error) {

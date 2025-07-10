@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from '@/types/auth';
@@ -9,6 +10,7 @@ const useAdminStatus = (profile: UserProfile | null) => {
     const checkSuperAdminStatus = async () => {
       // Если пользователь - halafbashar@gmail.com или vipregitrator@gmail.com, он всегда супер-админ
       if (profile?.email === 'halafbashar@gmail.com' || profile?.email === 'vipregitrator@gmail.com') {
+        console.log(`Setting super admin status for ${profile.email}`);
         setIsSuperAdmin(true);
         
         // Убедимся, что в базе данных установлен флаг is_super_admin
@@ -24,6 +26,7 @@ const useAdminStatus = (profile: UserProfile | null) => {
               
             if (!existingRole) {
               // Создаем запись, если её нет
+              console.log(`Creating admin role for ${profile.email}`);
               const { error } = await supabase
                 .from('user_roles')
                 .insert({
@@ -37,6 +40,7 @@ const useAdminStatus = (profile: UserProfile | null) => {
               }
             } else if (!existingRole.is_super_admin) {
               // Обновляем запись, если флаг не установлен
+              console.log(`Updating super admin flag for ${profile.email}`);
               const { error } = await supabase
                 .from('user_roles')
                 .update({ is_super_admin: true })
