@@ -14,7 +14,6 @@ import { trackPageView, trackProductView, trackAddToCart } from "@/utils/metrika
 import { getProductPrice } from "@/lib/utils";
 import { getProductStructuredData } from "@/components/seo/ProductMicrodata";
 import { getYandexMetaTags } from "@/components/seo/YandexMicrodata";
-import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -107,13 +106,7 @@ const ProductDetail = () => {
       return variant?.stockQuantity !== undefined && variant.stockQuantity > 0;
     }
     
-    // Проверяем stockQuantity, если он определен
-    if (product.stockQuantity !== undefined && product.stockQuantity !== null) {
-      return product.stockQuantity > 0;
-    }
-    
-    // Fallback к in_stock флагу (основной источник данных)
-    return Boolean(product.in_stock);
+    return product.inStock && (product.stockQuantity !== undefined ? product.stockQuantity > 0 : true);
   };
 
   const handleColorChange = (color: string) => {
@@ -121,26 +114,15 @@ const ProductDetail = () => {
     setQuantity(1);
   };
 
-  const handleAddToCart = async () => {
-    if (!product) {
-      toast.error("Товар не найден");
-      return;
-    }
-
-    if (!hasStock()) {
-      toast.error("Товар недоступен для добавления в корзину");
-      return;
-    }
-
-    try {
-      await addItem({
+  const handleAddToCart = () => {
+    if (product && hasStock()) {
+      addItem({
         product,
         quantity,
         color: selectedColor,
         selectedColorVariant
       });
       
-      // Отслеживаем добавление в корзину
       trackAddToCart({
         id: product.id,
         name: product.title,
@@ -149,18 +131,6 @@ const ProductDetail = () => {
           (product.discountPrice || product.price),
         category: product.category
       }, quantity);
-
-      // Показываем уведомление об успешном добавлении
-      const colorText = selectedColor ? ` (${selectedColor})` : '';
-      toast.success(`${product.title} добавлен в корзину`, {
-        description: `Количество: ${quantity} шт.${colorText}`
-      });
-
-    } catch (error) {
-      console.error("Ошибка при добавлении в корзину:", error);
-      toast.error("Не удалось добавить товар в корзину", {
-        description: "Попробуйте еще раз или обратитесь в поддержку"
-      });
     }
   };
 
@@ -184,7 +154,8 @@ const ProductDetail = () => {
   if (error || !product) {
     return <ProductNotFound />;
   }
-
+  console.log("product111")
+ console.log(product)
   // Подготовка расширенной SEO данных для товара
   const productSEO = {
     title: `${product.title} - купить в The X Shop`,
@@ -195,7 +166,7 @@ const ProductDetail = () => {
     ogImage: product.imageUrl,
     ogType: 'product' as const,
   };
-
+ 
   // Получаем структурированные данные
   const { structuredData, breadcrumbData } = getProductStructuredData(
     product, 
@@ -206,13 +177,13 @@ const ProductDetail = () => {
   );
 
   // Получаем Яндекс мета-теги
-  const yandexMetaTags = product ? getYandexMetaTags(
+  const yandexMetaTags = getYandexMetaTags(
     product, 
     selectedColor, 
     displayPrice, 
     hasStock(), 
     displayArticleNumber
-  ) : [];
+  );
 
   return (
     <div className="flex flex-col min-h-screen">

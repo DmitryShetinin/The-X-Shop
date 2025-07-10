@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -10,14 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 
 const Contacts = () => {
-  const { profile, isLoading: authLoading } = useAuth();
-  
-  // Используем безопасное получение значений профиля
-  const initialName = profile?.name || "";
-  const initialEmail = profile?.email || "";
-  
-  const [name, setName] = useState(initialName);
-  const [email, setEmail] = useState(initialEmail);
+  const { profile } = useAuth();
+  const [name, setName] = useState(profile?.name || "");
+  const [email, setEmail] = useState(profile?.email || "");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -83,7 +79,7 @@ const Contacts = () => {
                       id="name" 
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder={profile?.name || "Введите ваше имя"} // Безопасный доступ
+                      placeholder="Иван Иванов" 
                       className="w-full"
                     />
                   </div>
@@ -93,9 +89,9 @@ const Contacts = () => {
                     <Input 
                       type="email" 
                       id="email" 
-                      value={email} // Исправлено: используем состояние
+                      value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={profile?.email || "email@example.com"} // Безопасный доступ
+                      placeholder="ivan@example.com" 
                       className="w-full"
                     />
                   </div>

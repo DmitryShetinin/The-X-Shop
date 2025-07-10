@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,6 @@ interface ChatWindowProps {
   messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
-
 const ChatWindow: React.FC<ChatWindowProps> = ({
   messages,
   onClose,
@@ -24,15 +23,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   isSending,
   messagesEndRef
 }) => {
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]); // Зависимость от messages
-
-
- 
   return (
     <Card className="fixed bottom-4 right-4 w-80 sm:w-96 h-[500px] max-h-[80vh] flex flex-col shadow-lg animate-in slide-in-from-bottom-5 z-50 bg-white">
       <CardHeader className="p-3 border-b flex-shrink-0">

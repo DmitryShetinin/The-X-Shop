@@ -1,5 +1,13 @@
+import { Category } from '@/data/products/categoryApi';
+
 // Получить все категории из API
+import { API_BASE_URL } from '@/types/variables';
+
+
+
 export const fetchCategoriesFromPostgres = async (): Promise<Category[]> => {
+  console.log("API_BASE_URL")
+  console.log(API_BASE_URL)
   try {
     const response = await fetch(`${API_BASE_URL}/categories`);
     if (!response.ok) {

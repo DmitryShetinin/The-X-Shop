@@ -3,9 +3,8 @@ import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { sendMessage } from '@/services/chatService';
 import { toast } from 'sonner';
-import { ChatMessage } from '@/types/chat';
 
-export const useChatSender = (fetchFn: () => Promise<ChatMessage[]>) => {
+export const useChatSender = (fetchMessages: () => Promise<void>) => {
   const [isSending, setIsSending] = useState(false);
   const { profile } = useAuth();
 
@@ -28,7 +27,7 @@ export const useChatSender = (fetchFn: () => Promise<ChatMessage[]>) => {
       
       if (success) {
         console.log("Message sent successfully, refreshing messages");
-        //await fetchMessages();
+        await fetchMessages();
         toast.success("Сообщение отправлено");
       } else {
         console.error("Failed to send message");

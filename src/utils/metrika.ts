@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for Yandex Metrika tracking
  */
@@ -19,7 +20,7 @@ export function trackPageView(url?: string, options?: {
     try {
       // Убедимся что счетчик инициализирован
       if (!(window as any)._ymCounterInitialized) {
-        // Yandex Metrika counter might not be initialized yet
+        console.warn('Yandex Metrika counter might not be initialized yet');
       }
       
       // Добавляем текущее время для уникализации хитов
@@ -35,12 +36,12 @@ export function trackPageView(url?: string, options?: {
       (window as any).ym(COUNTER_ID, 'hit', url || window.location.href, trackParams);
       
       // Отладка
-      // [Metrika] Tracked page view: (debug removed)
+      console.debug('[Metrika] Tracked page view:', url || window.location.href, trackParams);
     } catch (error) {
-      // [Metrika] Error tracking page view: (error removed)
+      console.error('[Metrika] Error tracking page view:', error);
     }
   } else {
-    // [Metrika] ym object is not available (warn removed)
+    console.warn('[Metrika] ym object is not available');
   }
 }
 
@@ -98,9 +99,9 @@ export function trackPurchase(purchaseData: {
         });
       }
       
-      // [Metrika] Tracked purchase: (debug removed)
+      console.debug('[Metrika] Tracked purchase:', purchaseData);
     } catch (error) {
-      // [Metrika] Error tracking purchase: (error removed)
+      console.error('[Metrika] Error tracking purchase:', error);
     }
   }
 }

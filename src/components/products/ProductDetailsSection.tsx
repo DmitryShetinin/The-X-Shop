@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Product } from "@/types/product";
 import ImageGallery from "@/components/products/ImageGallery";
 import ProductVideo from "@/components/products/ProductVideo";
@@ -8,8 +9,7 @@ import StockStatus from "@/components/products/StockStatus";
 import ColorSelection from "@/components/products/ColorSelection";
 import QuantitySelector from "@/components/products/QuantitySelector";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Loader2 } from "lucide-react";
-import { formatPrice } from "@/lib/utils";
+import { ShoppingCart } from "lucide-react";
 
 interface ProductDetailsSectionProps {
   product: Product;
@@ -18,7 +18,7 @@ interface ProductDetailsSectionProps {
   hasStock: boolean;
   displayArticleNumber?: string;
   onColorChange: (color: string) => void;
-  onAddToCart: () => Promise<void>;
+  onAddToCart: () => void;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
 }
@@ -34,11 +34,10 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   quantity,
   onQuantityChange
 }) => {
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const selectedColorVariant = product?.colorVariants?.find(
     v => v.color === selectedColor
   );
-
+  
   const getVariantImage = () => {
     if (selectedColor && product?.colorVariants) {
       const variant = product.colorVariants.find(v => v.color === selectedColor);
@@ -48,24 +47,15 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
     }
     return product?.imageUrl || "";
   };
-
-  const handleAddToCart = async () => {
-    if (!hasStock || isAddingToCart) return;
-    
-    setIsAddingToCart(true);
-    try {
-      await onAddToCart();
-    } finally {
-      setIsAddingToCart(false);
-    }
-  };
+ 
+  console.log('ProductDetailsSection rendering with product:', product.title);
 
   return (
     <div className="grid md:grid-cols-2 gap-8">
       {/* Left side - images */}
       <div>
         <ImageGallery 
-          mainImage={getVariantImage()} 
+          mainImage={ `/images/${getVariantImage()}` || 'not-found.jpg' } 
           additionalImages={product.additionalImages} 
         />
         
@@ -130,32 +120,16 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         />
 
         {/* Add to cart button */}
-        <div className="pt-4 space-y-3">
+        <div className="pt-4">
           <Button 
             size="lg" 
             className="w-full"
-            onClick={handleAddToCart}
-            disabled={!hasStock || isAddingToCart}
+            onClick={onAddToCart}
+            disabled={!hasStock}
           >
-            {isAddingToCart ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Добавляем в корзину...
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                {hasStock ? `Добавить в корзину за ${formatPrice(displayPrice)}` : "Нет в наличии"}
-              </>
-            )}
+            <ShoppingCart className="mr-2 h-5 w-5" />
+            {hasStock ? `Купить за ${displayPrice} ₽` : "Нет в наличии"}
           </Button>
-          
-          {hasStock && (
-            <div className="text-sm text-muted-foreground text-center">
-              {quantity > 1 ? `Будет добавлено ${quantity} шт.` : "Будет добавлено 1 шт."}
-              {selectedColor && ` (${selectedColor})`}
-            </div>
-          )}
         </div>
       </div>
     </div>
