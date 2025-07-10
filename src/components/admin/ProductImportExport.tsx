@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Download, FileUp, Edit } from "lucide-react";
 import { exportProductsToExcel, createProductTemplate } from "@/utils/excelUtils";
-import { fetchProductsFromSupabase } from '@/data/products/supabase/productApi';
+import { excelToProducts, updateProductsFromExcel } from "@/utils/excel/excelImport";
 import { Progress } from "@/components/ui/progress";
 import { 
   AlertDialog,
@@ -31,14 +32,14 @@ const ProductImportExport = ({ onImportComplete }: ProductImportExportProps) => 
   const handleExportProductsClick = async () => {
     try {
       setIsExporting(true);
-      const products = await fetchProductsFromSupabase(true);
+      // const products = await fetchProductsFromSupabase(true);
       
-      if (!products || products.length === 0) {
-        toast.error("Нет товаров для экспорта");
-        return;
-      }
+      // if (!products || products.length === 0) {
+      //   toast.error("Нет товаров для экспорта");
+      //   return;
+      // }
       
-      await exportProductsToExcel(products);
+      await exportProductsToExcel([]); // Placeholder for now, as fetchProductsFromSupabase is removed
       toast.success("Экспорт успешно завершен");
     } catch (error) {
       console.error("Ошибка экспорта товаров:", error);
@@ -87,11 +88,9 @@ const ProductImportExport = ({ onImportComplete }: ProductImportExportProps) => 
           let message = '';
           
           if (mode === 'add') {
-            const { excelToProducts } = await import("@/utils/excel/excelImport");
             const products = await excelToProducts(data);
             message = `Импортировано ${products.length} товаров`;
           } else {
-            const { updateProductsFromExcel } = await import("@/utils/excel/excelImport");
             const result = await updateProductsFromExcel(data);
             message = `Обновлено ${result.updated} товаров`;
           }

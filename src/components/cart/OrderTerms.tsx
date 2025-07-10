@@ -2,7 +2,6 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Link } from "react-router-dom";
 
 interface OrderTermsProps {
   termsAgreed: boolean;
@@ -47,7 +46,7 @@ const OrderTerms = ({
           htmlFor="privacy" 
           className="text-sm font-normal cursor-pointer leading-tight"
         >
-          Я согласен с <Link to="/privacy" className="text-primary underline">Политикой конфиденциальности</Link>
+          Я согласен с <a href="/privacy" className="text-primary underline">Политикой конфиденциальности</a>
         </Label>
       </div>
       

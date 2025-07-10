@@ -1,4 +1,5 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -10,21 +11,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { exportProductsToExcel } from "@/utils/excelUtils";
-import { fetchProductsFromSupabase } from "@/data/products/supabaseApi";
 import { Product } from "@/types/product";
 import { Download, ChevronDown, BarChart as BarChartIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils";
-
-const BarChart = lazy(() => import('recharts').then(mod => ({ default: mod.BarChart })));
-const Bar = lazy(() => import('recharts').then(mod => ({ default: mod.Bar })));
-const XAxis = lazy(() => import('recharts').then(mod => ({ default: mod.XAxis })));
-const YAxis = lazy(() => import('recharts').then(mod => ({ default: mod.YAxis })));
-const CartesianGrid = lazy(() => import('recharts').then(mod => ({ default: mod.CartesianGrid })));
-const Tooltip = lazy(() => import('recharts').then(mod => ({ default: mod.Tooltip })));
-const Legend = lazy(() => import('recharts').then(mod => ({ default: mod.Legend })));
-const ResponsiveContainer = lazy(() => import('recharts').then(mod => ({ default: mod.ResponsiveContainer })));
 
 const AdminReports = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -36,8 +28,9 @@ const AdminReports = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const allProducts = await fetchProductsFromSupabase(true);
-        setProducts(allProducts);
+        // Все импорты и обращения к supabase и supabase-файлам удалены. Если функционал больше не нужен — удалить/закомментировать соответствующий код.
+        // const allProducts = await fetchProductsFromSupabase(true);
+        // setProducts(allProducts);
       } catch (error) {
         console.error("Error loading products for reports:", error);
         toast.error("Не удалось загрузить данные для отчетов");
@@ -219,21 +212,19 @@ const AdminReports = () => {
               </div>
             ) : chartData.length > 0 ? (
               <div className="h-[400px] w-full">
-                <Suspense fallback={<div>Загрузка графика...</div>}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={chartData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={70} />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="value" name="Количество" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Suspense>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={70} />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" name="Количество" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             ) : (
               <div className="h-[400px] w-full flex items-center justify-center text-muted-foreground">

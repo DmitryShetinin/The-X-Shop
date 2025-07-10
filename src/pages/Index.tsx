@@ -9,20 +9,6 @@ import ProductsSection from "@/components/home/ProductsSection";
 import BenefitsSection from "@/components/home/BenefitsSection";
 import { useHomeData } from "@/hooks/useHomeData";
 
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        // Генерируем случайный индекс
-        const j = Math.floor(Math.random() * (i + 1));
-        // Меняем местами элементы
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-
-
-
 const Index = () => {
   const { bestsellers, newProducts, categories, categoryObjects, loading } = useHomeData();
 
@@ -45,13 +31,13 @@ const Index = () => {
         <CategoriesSection categoryObjects={categoryObjects} loading={loading} />
         <ProductsSection 
           title="Бестселлеры" 
-          products={shuffleArray(bestsellers)} 
+          products={bestsellers} 
           loading={loading} 
           className="bg-gray-50"
         />
         <ProductsSection 
           title="Новинки" 
-          products={shuffleArray(newProducts)} 
+          products={newProducts} 
           loading={loading}
         />
         <BenefitsSection />

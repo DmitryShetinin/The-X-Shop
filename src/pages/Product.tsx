@@ -31,7 +31,7 @@ const Product = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!id) return;
- 
+      
       setLoading(true);
       try {
         // Загрузка товара

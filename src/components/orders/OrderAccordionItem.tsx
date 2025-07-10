@@ -53,10 +53,26 @@ const OrderAccordionItem: React.FC<OrderAccordionItemProps> = ({
   
   // Безопасное отображение номера заказа
   const displayOrderNumber = order_number || "Номер не указан";
-  
-  // Безопасное отображение суммы
-  const safeTotal = typeof total === 'number' && !isNaN(total) ? total : 0;
-  
+  // Безопасное преобразование в число
+  let safeTotal = 0;
+
+  if (total !== null && total !== undefined) {
+    // Преобразуем в число, заменяя запятые на точки для корректного распознавания дробных чисел
+    const numericValue = typeof total === 'string'
+      ? parseFloat((total as string).replace(/,/g, '.'))
+      : Number(total);
+
+    // Проверяем результат преобразования
+    if (!isNaN(numericValue) && isFinite(numericValue)) {
+      safeTotal = numericValue;
+      console.log("Успешное преобразование. safeTotal:", safeTotal);
+    } else {
+      console.warn("Некорректное числовое значение. Используется 0 по умолчанию.");
+    }
+  } else {
+    console.warn("Значение total равно null или undefined. Используется 0 по умолчанию.");
+  }
+
   return (
     <AccordionItem key={id} value={id}>
       <AccordionTrigger className="hover:no-underline">
@@ -67,7 +83,7 @@ const OrderAccordionItem: React.FC<OrderAccordionItemProps> = ({
           </div>
           <div className="flex items-center gap-3 mt-2 sm:mt-0">
             <Badge variant="secondary">
-              {safeTotal.toLocaleString()} ₽
+              {total.toLocaleString()} ₽
             </Badge>
             <OrderStatus status={status} />
           </div>

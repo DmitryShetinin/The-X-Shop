@@ -1,3 +1,4 @@
+
 import { Navigate, Outlet } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
@@ -18,15 +19,15 @@ export const AdminAuth = ({ children, editorAccess = false }: AdminAuthProps) =>
 
     const checkAccess = async () => {
       try {
-        // console.log('AdminAuth: Checking access...', { isAuthenticated, isLoading, user });
+        console.log('AdminAuth: Checking access...', { isAuthenticated, isLoading, user });
         
         if (isLoading) {
-          // console.log('AdminAuth: Still loading auth state');
+          console.log('AdminAuth: Still loading auth state');
           return;
         }
 
         if (!isAuthenticated || !user) {
-          // console.log('AdminAuth: User not authenticated');
+          console.log('AdminAuth: User not authenticated');
           if (isMounted) {
             setHasAccess(false);
             setIsChecking(false);
@@ -34,30 +35,31 @@ export const AdminAuth = ({ children, editorAccess = false }: AdminAuthProps) =>
           return;
         }
 
-        // console.log('AdminAuth: User authenticated, checking roles for user:', user.id);
+        console.log('AdminAuth: User authenticated, checking roles for user:', user.id);
 
         // Проверяем роль пользователя
         const isAdmin = await hasRole('admin');
         const isEditor = editorAccess && await hasRole('editor');
         const access = isAdmin || isEditor;
         
-        // console.log('AdminAuth: Role check results:', { isAdmin, isEditor, access });
+        console.log('AdminAuth: Role check results:', { isAdmin, isEditor, access });
         
         if (isMounted) {
           setHasAccess(access);
           setIsChecking(false);
 
           if (!access) {
-            // console.log('AdminAuth: Access denied for user');
+        
+            console.log('AdminAuth: Access denied for user');
             toast("Недостаточно прав", {
               description: "У вас нет доступа к административной панели",
             });
           } else {
-            // console.log('AdminAuth: Access granted');
+            console.log('AdminAuth: Access granted');
           }
         }
       } catch (error) {
-        // console.error("AdminAuth: Ошибка при проверке прав доступа:", error);
+        console.error("AdminAuth: Ошибка при проверке прав доступа:", error);
         if (isMounted) {
           setHasAccess(false);
           setIsChecking(false);
@@ -75,7 +77,7 @@ export const AdminAuth = ({ children, editorAccess = false }: AdminAuthProps) =>
     };
   }, [isLoading, isAuthenticated, hasRole, editorAccess, user]);
 
-  // console.log('AdminAuth: Current state:', { isLoading, isChecking, isAuthenticated, hasAccess });
+  console.log('AdminAuth: Current state:', { isLoading, isChecking, isAuthenticated, hasAccess });
 
   if (isLoading || isChecking) {
     return (
@@ -89,12 +91,12 @@ export const AdminAuth = ({ children, editorAccess = false }: AdminAuthProps) =>
   }
 
   if (!isAuthenticated) {
-    // console.log('AdminAuth: Redirecting to admin login - not authenticated');
+    console.log('AdminAuth: Redirecting to admin login - not authenticated');
     return <Navigate to="/admin/login" replace />;
   }
 
   if (!hasAccess) {
-    // console.log('AdminAuth: Redirecting to home - no access');
+    console.log('AdminAuth: Redirecting to home - no access');
     return <Navigate to="/" replace />;
   }
 

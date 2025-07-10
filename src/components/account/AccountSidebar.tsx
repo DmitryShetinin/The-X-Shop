@@ -1,12 +1,11 @@
-
-import React from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { User, Package, LogOut, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import AdminPanelLink from "./AdminPanelLink";
+import { API_BASE_URL } from "@/types/variables";
 
 interface AccountSidebarProps {
   activeTab: string;
@@ -19,19 +18,14 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({
   setActiveTab,
   onLogout
 }) => {
-  const { profile } = useAuth();
+  const { user, updateProfile } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || "");
 
-  if (!profile) return null;
+  if (!user) return null;
 
-  // Получаем инициалы пользователя для аватара
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map(part => part[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+
 
   return (
     <>
@@ -40,14 +34,20 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarFallback className="text-lg bg-primary text-primary-foreground">
-                {getInitials(profile.name)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <div
+                className="w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-primary bg-background flex items-center justify-center"
+              >
+                <img
+                  src="/images/00099aa0-4965-4836-89c9-6a5533fe4e4e.png"
+                  alt="profile"
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            </div>
             <div>
-              <CardTitle>{profile.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">{profile.email}</p>
+              <CardTitle>{user.name}</CardTitle>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
           </div>
         </CardHeader>

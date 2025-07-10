@@ -22,11 +22,11 @@ import { toast } from "sonner";
 type FormData = z.infer<typeof RegisterFormSchema>;
 
 export default function RegisterForm() {
-  const { signupWithEmail } = useAuth();
-  const navigate = useNavigate();
+  const { register } = useAuth();
+ 
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  
+
   const form = useForm<FormData>({
     resolver: zodResolver(RegisterFormSchema),
     defaultValues: {
@@ -40,32 +40,27 @@ export default function RegisterForm() {
   async function onSubmit(data: FormData) {
     setIsLoading(true);
     setShowLoginPrompt(false);
-    
     try {
-      const result = await signupWithEmail(data.email, data.password, { name: data.name });
-      
-      if (result.success) {
+      const success = await register(data.email, data.password, data.name);
+      if (success) {
         toast.success("Регистрация успешна!", {
-          description: "Теперь вы можете войти в свой аккаунт.",
+          description: "Теперь вы можете пользоваться своим аккаунтом.",
         });
-        navigate("/login");
-      } else if (result.isExistingUser) {
-        // User already exists, show login prompt
+  
+      } else {
         setShowLoginPrompt(true);
         form.setError("email", {
           type: "manual",
           message: "Пользователь с таким email уже существует",
         });
-      } else {
         toast.error("Ошибка при регистрации", {
-          description: result.message || "Что-то пошло не так. Попробуйте еще раз.",
+          description: "Пользователь с таким email уже существует",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error("Ошибка при регистрации", {
-        description: "Что-то пошло не так. Попробуйте еще раз.",
+        description: error.message || "Что-то пошло не так. Попробуйте еще раз.",
       });
-      console.error("Registration error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +142,7 @@ export default function RegisterForm() {
 
         {showLoginPrompt && (
           <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-700">
-            У вас уже есть аккаунт.{" "}
+            У вас уже есть аккаунт.{' '}
             <Link to="/login" className="font-medium underline">
               Войти сейчас
             </Link>
@@ -169,7 +164,7 @@ export default function RegisterForm() {
         </Button>
 
         <div className="text-center text-sm">
-          Уже есть аккаунт?{" "}
+          Уже есть аккаунт?{' '}
            <Link to="/login" className="font-medium">
             Войти
           </Link>

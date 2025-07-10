@@ -17,7 +17,7 @@ export const NavActions: React.FC<NavActionsProps> = ({
   onToggleMenu,
   onOpenSearch,
 }) => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const { items } = useCart(); // Use the proper hook
   const { wishlist } = useWishlist();
 
@@ -53,7 +53,7 @@ export const NavActions: React.FC<NavActionsProps> = ({
       </Link>
       
       <Link
-        to={profile ? "/account" : "/login"}
+        to={user ? "/account" : "/login"}
         className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent"
       >
         <User className="h-5 w-5" />

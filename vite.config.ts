@@ -32,12 +32,15 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     host: "::",
-    port: 8080,
+    port: 3000,
+    strictPort: false,
     headers: {
       'Connection': 'keep-alive',
       'Upgrade-Insecure-Requests': '1'
-    }
+    },
+    historyApiFallback: true
   },
+  base: '/',
   plugins: [
     react(),
     mode === 'development' && componentTagger(),

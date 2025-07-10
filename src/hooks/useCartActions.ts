@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { CartItem } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
@@ -20,48 +21,21 @@ export function useCartActions() {
     try {
       const existingItemIndex = findExistingItemIndex(items, item);
       
-      // Проверяем наличие товара на складе
+      // Check if there's enough stock for the requested quantity
       const stockAvailable = await checkProductStock(String(item.product.id), item.color);
       
       if (!stockAvailable) {
         toast({
-          title: "Товар недоступен",
-          description: "Недостаточно товара на складе или товар отсутствует",
+          title: "Ошибка",
+          description: "Недостаточно товара на складе",
           variant: "destructive"
         });
-        return;
-      }
-
-      // Проверяем, не превышает ли общее количество в корзине доступный запас
-      const currentQuantityInCart = existingItemIndex >= 0 ? items[existingItemIndex].quantity : 0;
-      const newTotalQuantity = currentQuantityInCart + item.quantity;
-      
-      // Получаем информацию о доступном количестве
-      let availableStock = 0;
-      
-      if (item.color && item.product.colorVariants?.length) {
-        const variant = item.product.colorVariants.find(v => v.color === item.color);
-        if (variant && variant.stockQuantity !== null && variant.stockQuantity !== undefined) {
-          availableStock = Number(variant.stockQuantity);
-        }
-      } else if (item.product.stockQuantity !== null && item.product.stockQuantity !== undefined) {
-        availableStock = Number(item.product.stockQuantity);
-      } else if (item.product.in_stock) {
-        availableStock = 999; // Если есть флаг in_stock, но нет точного количества
-      }
-      
-      if (newTotalQuantity > availableStock) {
-        toast({
-          title: "Превышен лимит",
-          description: `Доступно только ${availableStock} шт. товара`,
-          variant: "destructive"
-        });
-        return;
+        return; // Don't update cart if not enough stock
       }
 
       setItems((prevItems) => {
         if (existingItemIndex >= 0) {
-          // Товар уже есть в корзине, обновляем количество
+          // Item exists, update quantity
           const newItems = [...prevItems];
           newItems[existingItemIndex] = {
             ...newItems[existingItemIndex],
@@ -69,26 +43,22 @@ export function useCartActions() {
           };
           return newItems;
         } else {
-          // Товара нет в корзине, добавляем новый
+          // Item doesn't exist, add it
           return [...prevItems, item];
         }
       });
       
-      // Показываем уведомление об успешном добавлении
-      const colorText = item.color ? ` (${item.color})` : '';
       toast({
         title: "Товар добавлен в корзину",
-        description: `${item.product.title}${colorText} - ${item.quantity} шт.`
+        description: `${item.product.title} - ${item.color || ""}`
       });
-      
     } catch (error) {
       console.error("Error adding item to cart:", error);
       toast({
         title: "Ошибка",
-        description: "Не удалось добавить товар в корзину. Попробуйте еще раз.",
+        description: "Не удалось добавить товар в корзину",
         variant: "destructive"
       });
-      throw error; // Пробрасываем ошибку для обработки в компоненте
     }
   };
 

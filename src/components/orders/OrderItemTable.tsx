@@ -56,20 +56,20 @@ const OrderItemTable: React.FC<OrderItemTableProps> = ({ items }) => {
               
               // Улучшенная логика получения изображения товара
               let imageUrl = "";
-              
+              console.log(product)
               // Сначала пытаемся получить изображение из продукта
-              if (product?.imageUrl) {
-                imageUrl = product.imageUrl;
+              if (product?.image_url) {
+                imageUrl =  "./images/" + product.image_url;
               }
               // Если есть цветовые варианты и выбран цвет, ищем соответствующее изображение
               else if (item?.color && product?.colorVariants && Array.isArray(product.colorVariants)) {
                 const colorVariant = product.colorVariants.find(variant => 
                   variant.color && variant.color.toLowerCase() === item.color.toLowerCase()
                 );
-                if (colorVariant?.imageUrl) {
-                  imageUrl = colorVariant.imageUrl;
-                } else if (product?.imageUrl) {
-                  imageUrl = product.imageUrl;
+                if (colorVariant?.image_url) {
+                  imageUrl = colorVariant.image_url;
+                } else if (product?.image_url) {
+                  imageUrl = product.image_url;
                 }
               }
               // Попытка получить изображение из дополнительных изображений
@@ -77,8 +77,8 @@ const OrderItemTable: React.FC<OrderItemTableProps> = ({ items }) => {
                 imageUrl = product.additionalImages[0];
               }
               // Fallback к основному изображению продукта
-              else if (product?.imageUrl) {
-                imageUrl = product.imageUrl;
+              else if (product?.image_url) {
+                imageUrl = product.image_url;
               }
               
               const color = item?.color || null;

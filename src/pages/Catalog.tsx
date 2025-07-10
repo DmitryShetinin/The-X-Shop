@@ -1,12 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import CatalogLayout from "@/components/catalog/CatalogLayout";
 import CatalogFilters from "@/components/catalog/CatalogFilters";
 import CatalogProductsSection from "@/components/catalog/CatalogProductsSection";
 import { SEOHead } from "@/components/seo/SEOHead";
-import { Filter, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCatalogData } from "@/hooks/useCatalogData";
 import { useProductFiltering } from "@/hooks/useProductFiltering";
 import { useActiveFilters } from "@/hooks/useCatalog/useActiveFilters";
@@ -28,8 +28,8 @@ const Catalog = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Загрузка данных каталога
-  const { allProducts, availableCategories, categoryObjects, loading, error, retry } = useCatalogData(categoryParam);
- 
+  const { allProducts, availableCategories, categoryObjects, loading } = useCatalogData(categoryParam);
+  
   // Фильтрация и сортировка продуктов
   const { filteredProducts, availableColors, inStockCount, outOfStockCount } = useProductFiltering({
     allProducts,
@@ -105,8 +105,8 @@ const Catalog = () => {
     setPriceRange((prev) => ({ ...prev, [type]: numValue }));
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -157,27 +157,6 @@ const Catalog = () => {
         description={seoData.description}
         keywords={categoryParam ? `${categoryParam}, товары из Китая, минимализм` : "каталог товаров, товары из Китая, минималистичный дизайн"}
       />
-      
-      {/* Error Alert */}
-      {error && (
-        <Alert className="mb-6 border-red-200 bg-red-50">
-          <WifiOff className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800">
-            <div className="flex items-center justify-between">
-              <span>{error}</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={retry}
-                className="ml-4 border-red-300 text-red-700 hover:bg-red-100"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Повторить
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
       
       <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8" itemScope itemType="https://schema.org/CollectionPage">
         <meta itemProp="name" content={seoData.title} />

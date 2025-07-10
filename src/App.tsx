@@ -48,10 +48,6 @@ const router = createBrowserRouter([
         element: <ProductDetail />,
       },
       {
-        path: ":filename",
-        element: <StaticProductRedirect />,
-      },
-      {
         path: "cart",
         element: <Cart />,
       },
@@ -111,6 +107,11 @@ const router = createBrowserRouter([
       {
         path: "thankYou",
         element: <ThankYou />,
+      },
+      {
+        // Перемещаем :filename в конец, чтобы он не перехватывал другие маршруты
+        path: ":filename",
+        element: <StaticProductRedirect />,
       },
     ],
   },

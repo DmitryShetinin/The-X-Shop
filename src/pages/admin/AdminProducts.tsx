@@ -4,14 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { 
-  fetchProductsFromSupabase, 
-  fetchCategoriesFromSupabase, 
-  addCategoryToSupabase,
-  bulkDeleteProducts,
-  bulkArchiveProducts,
-  mergeProductsByModelName
-} from "@/data/products/supabaseApi";
 import { Product } from "@/types/product";
 import ProductForm from "@/components/admin/ProductForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
