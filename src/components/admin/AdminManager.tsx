@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card"; 
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import AdminActions from './AdminActions';
 import AdminSearchResult from './AdminSearchResult';
 import useAdminStatus from '@/hooks/useAdminStatus';
@@ -10,43 +10,31 @@ import { useAuth } from '@/context/AuthContext';
 const AdminManager = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [searchResult, setSearchResult] = useState<{ email: string; isAdmin: boolean } | null>(null);
+  const [searchResult, setSearchResult] = useState<{ email: string; isAdmin: boolean, id: string } | null>(null);
   const { profile } = useAuth();
   const { isSuperAdmin } = useAdminStatus(profile);
 
-  // Check if email exists and if it has admin role
+  // Check if email exists and if it has admin role (через backend)
   const checkUserExistsAndIsAdmin = async (email: string) => {
     setLoading(true);
     try {
-      // First, find the user by email to get the ID
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('email', email)
-        .single();
-
-      if (profileError || !profileData) {
+      // Найти пользователя по email
+      const res = await fetch(`/api/admin/users?email=${encodeURIComponent(email)}`);
+      if (!res.ok) {
         setSearchResult(null);
         toast.error('Пользователь с таким email не найден');
         setLoading(false);
         return null;
       }
-
-      // Then check if they have the admin role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', profileData.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-
+      const user = await res.json(); // { id, email, roles: string[] }
       setSearchResult({
-        email: profileData.email,
-        isAdmin: !!roleData
+        email: user.email,
+        isAdmin: user.roles?.includes('admin'),
+        id: user.id
       });
-      
-      return profileData;
+      return user;
     } catch (error) {
+      console.error('Error checking user:', error);
       toast.error('Ошибка при проверке пользователя');
       return null;
     } finally {
@@ -59,7 +47,6 @@ const AdminManager = () => {
       toast.error('Только супер-администраторы могут управлять администраторами');
       return;
     }
-
     setLoading(true);
     try {
       const user = await checkUserExistsAndIsAdmin(email);
@@ -67,30 +54,25 @@ const AdminManager = () => {
         setLoading(false);
         return;
       }
-
-      // Skip if already admin
       if (searchResult?.isAdmin) {
         toast.info('Пользователь уже является администратором');
         setLoading(false);
         return;
       }
-
-      // Add admin role
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: user.id,
-          role: 'admin'
-        });
-
-      if (error) {
+      // Добавить роль admin
+      const res = await fetch(`/api/admin/users/${user.id}/roles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'admin' })
+      });
+      if (!res.ok) {
         toast.error('Ошибка при назначении прав администратора');
         return;
       }
-
       toast.success('Права администратора успешно предоставлены');
       setSearchResult({ ...searchResult!, isAdmin: true });
     } catch (error) {
+      console.error('Error adding admin:', error);
       toast.error('Ошибка при назначении прав администратора');
     } finally {
       setLoading(false);
@@ -102,7 +84,6 @@ const AdminManager = () => {
       toast.error('Только супер-администраторы могут управлять администраторами');
       return;
     }
-
     setLoading(true);
     try {
       const user = await checkUserExistsAndIsAdmin(email);
@@ -110,88 +91,35 @@ const AdminManager = () => {
         setLoading(false);
         return;
       }
-
-      // Skip if not admin
       if (!searchResult?.isAdmin) {
         toast.info('Пользователь не является администратором');
         setLoading(false);
         return;
       }
-
-      // Check if trying to remove rights from a fixed super admin
       if (email === 'halafbashar@gmail.com' || email === 'vipregitrator@gmail.com') {
         toast.error('Невозможно лишить прав администратора учетную запись основателя');
         setLoading(false);
         return;
       }
-      
-      // Remove admin role
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('role', 'admin');
-
-      if (error) {
+      // Удалить роль admin
+      const res = await fetch(`/api/admin/users/${user.id}/roles`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'admin' })
+      });
+      if (!res.ok) {
         toast.error('Ошибка при удалении прав администратора');
         return;
       }
-
       toast.success('Права администратора успешно удалены');
       setSearchResult({ ...searchResult!, isAdmin: false });
     } catch (error) {
+      console.error('Error removing admin:', error);
       toast.error('Ошибка при удалении прав администратора');
     } finally {
       setLoading(false);
     }
   };
-
-  // Special handling for vipregitrator@gmail.com - make them admin automatically
-  useEffect(() => {
-    const ensureVipRegistratorIsAdmin = async () => {
-      const vipEmail = 'vipregitrator@gmail.com';
-      try {
-        // First check if this account exists
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .eq('email', vipEmail)
-          .single();
-
-        if (profileError || !profileData) {
-          return;
-        }
-
-        // Check if already admin
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('*')
-          .eq('user_id', profileData.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-
-        // If not admin, make them admin
-        if (!roleData) {
-          const { error } = await supabase
-            .from('user_roles')
-            .insert({
-              user_id: profileData.id,
-              role: 'admin',
-              is_super_admin: true // Mark as super admin
-            });
-
-          if (error) {
-          } else {
-          }
-        }
-      } catch (error) {
-      }
-    };
-
-    if (isSuperAdmin) {
-      ensureVipRegistratorIsAdmin();
-    }
-  }, [isSuperAdmin]);
 
   const handleSearch = async () => {
     if (email) {

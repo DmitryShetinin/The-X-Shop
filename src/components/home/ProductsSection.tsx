@@ -20,7 +20,6 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({
   className = "",
   schemaType = "https://schema.org/CollectionPage"
 }) => {
-  
   return (
     <section className={`py-12 ${className}`} itemScope itemType={schemaType}>
       <meta itemProp="name" content={`${title} The X Shop`} />
@@ -34,8 +33,8 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({
         </div>
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((_, i) => (
-              <div key={i} className="h-[300px] bg-gray-200 animate-pulse rounded-lg">{i}</div>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-[300px] bg-gray-200 animate-pulse rounded-lg"></div>
             ))}
           </div>
         ) : (

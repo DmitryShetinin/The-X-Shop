@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { CartItem, DeliveryMethod } from "@/types/product";
 import { useCartCalculations } from "@/hooks/useCartCalculations";
@@ -24,24 +25,29 @@ export const CartContext = createContext<CartContextType | undefined>(undefined)
 // Helper function to validate cart items
 const validateCartItems = (items: any[]): CartItem[] => {
   if (!Array.isArray(items)) {
+    console.warn("Cart items is not an array, returning empty array");
     return [];
   }
 
   return items.filter(item => {
     // Check if item has required structure
     if (!item || typeof item !== 'object') {
+      console.warn("Invalid cart item (not an object):", item);
       return false;
     }
 
     if (!item.product || typeof item.product !== 'object') {
+      console.warn("Invalid cart item (missing or invalid product):", item);
       return false;
     }
 
     if (!item.product.id || !item.product.title) {
+      console.warn("Invalid cart item (missing product id or title):", item);
       return false;
     }
 
     if (typeof item.quantity !== 'number' || item.quantity <= 0) {
+      console.warn("Invalid cart item (invalid quantity):", item);
       return false;
     }
 

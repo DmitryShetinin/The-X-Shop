@@ -1,3 +1,4 @@
+
 import { CartItem, DeliveryMethod } from "@/types/product";
 
 export function useCartCalculations(items: CartItem[], deliveryMethod: DeliveryMethod | null) {
@@ -9,12 +10,15 @@ export function useCartCalculations(items: CartItem[], deliveryMethod: DeliveryM
   const subtotal = validItems.reduce((total, item) => {
     // Get the price based on the selected color variant
     const price = getItemPrice(item);
+    console.log(`Item ${item.product.title}, price: ${price}, quantity: ${item.quantity}`);
     return total + (price * item.quantity);
   }, 0);
 
   // Calculate total with delivery
   const deliveryPrice = deliveryMethod?.price || 0;
   const total = subtotal + deliveryPrice;
+
+  console.log(`Subtotal: ${subtotal}, Delivery: ${deliveryPrice}, Total: ${total}`);
   
   return {
     totalItems,

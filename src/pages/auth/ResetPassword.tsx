@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { supabase } from "@/integrations/supabase/client";
 import ResetPasswordForm from "@/components/auth/ResetPasswordForm";
 import ResetPasswordError from "@/components/auth/ResetPasswordError";
 import ResetPasswordWrapper from "@/components/auth/ResetPasswordWrapper";

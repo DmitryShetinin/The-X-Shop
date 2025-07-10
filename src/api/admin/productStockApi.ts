@@ -1,42 +1,31 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { updateProductStock } from "@/data/products/product/services/productStockService";
+import { API_BASE_URL } from "@/types/variables";
 
 /**
- * Update product stock quantity directly
+ * Update product stock quantity directly via backend API
  */
 export const updateProductStockApi = async (
-  productId: string, 
-  stockQuantity: number, 
+  productId: string,
+  stockQuantity: number,
   colorVariant?: string
-): Promise<{success: boolean, message?: string, error?: string}> => {
+): Promise<{ success: boolean; message?: string; error?: string }> => {
   try {
-    // Verify admin role first (example - implement proper auth check)
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, error: "Unauthorized" };
+    let url = `${API_BASE_URL}/products/${productId}/stock`;
+    const body: any = { stockQuantity };
+    if (colorVariant) body.colorVariant = colorVariant;
+
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      return { success: false, error: err.error || "Ошибка обновления" };
     }
-    
-    // Update the stock directly using our stock service
-    const success = await updateProductStock(productId, stockQuantity, colorVariant);
-    
-    if (success) {
-      return {
-        success: true,
-        message: "Stock updated successfully"
-      };
-    } else {
-      return {
-        success: false,
-        error: "Failed to update stock"
-      };
-    }
-  } catch (error) {
-    console.error("Error updating product stock:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error"
-    };
+    return { success: true, message: "Stock updated successfully" };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Unknown error" };
   }
 };
 
@@ -44,22 +33,25 @@ export const updateProductStockApi = async (
  * API endpoint for updating product stock (to be used by frontend)
  */
 export const updateProductStockApiEndpoint = async (
-  productId: string, 
-  stockQuantity: number, 
+  productId: string,
+  stockQuantity: number,
   colorVariant?: string
-): Promise<{success: boolean, message?: string, error?: string, stockQuantity?: number}> => {
+): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  stockQuantity?: number;
+}> => {
   try {
     const result = await updateProductStockApi(productId, stockQuantity, colorVariant);
-    
     return {
       ...result,
-      stockQuantity: result.success ? stockQuantity : undefined
+      stockQuantity: result.success ? stockQuantity : undefined,
     };
-  } catch (error) {
-    console.error("Error in updateProductStockApiEndpoint:", error);
+  } catch (error: any) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error.message || "Unknown error",
     };
   }
 };

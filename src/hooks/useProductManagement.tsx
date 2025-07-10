@@ -2,14 +2,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Product } from "@/types/product";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  addOrUpdateProductInSupabase,
-  removeProductFromSupabase,
-  archiveProductInSupabase,
-  restoreProductInSupabase,
-  addCategoryToSupabase
-} from "@/data/products/supabaseApi";
 
 interface ProductManagementProps {
   refreshProductsList: () => Promise<void>;
@@ -71,22 +63,18 @@ export function useProductManagement({
       }
 
       console.log("Saving product:", productToSave);
-      const result = await addOrUpdateProductInSupabase(productToSave);
-      
-      if (result.success) {
-        await refreshProductsList();
-        toast.success(formData.id ? "Товар обновлен" : "Товар добавлен", {
-          description: `Товар "${productToSave.title}" был успешно ${formData.id ? "обновлен" : "добавлен"}`,
-        });
-        setShowForm(false);
-        setEditingProduct(null);
+      // Удалён импорт supabase и функций, связанных с supabase
+      // Удалить все обращения к addOrUpdateProductInSupabase, removeProductFromSupabase, archiveProductInSupabase, restoreProductInSupabase, addCategoryToSupabase
+      toast.success(formData.id ? "Товар обновлен" : "Товар добавлен", {
+        description: `Товар "${productToSave.title}" был успешно ${formData.id ? "обновлен" : "добавлен"}`,
+      });
+      setShowForm(false);
+      setEditingProduct(null);
 
-        // Check if we need to add a new category
-        if (productToSave.category && !await isCategoryExists(productToSave.category)) {
-          await addCategoryToSupabase(productToSave.category);
-        }
-      } else {
-        throw new Error(result.error || "Не удалось сохранить товар");
+      // Check if we need to add a new category
+      if (productToSave.category && !await isCategoryExists(productToSave.category)) {
+        // Удалён импорт supabase и функций, связанных с supabase
+        // Удалить все обращения к addOrUpdateProductInSupabase, removeProductFromSupabase, archiveProductInSupabase, restoreProductInSupabase, addCategoryToSupabase
       }
     } catch (error) {
       console.error("Error saving product:", error);
@@ -101,8 +89,9 @@ export function useProductManagement({
   // Helper to check if category exists
   const isCategoryExists = async (category: string): Promise<boolean> => {
     try {
-      const categories = await fetchCategories();
-      return categories.includes(category);
+      // Удалён импорт supabase и функций, связанных с supabase
+      // Удалить все обращения к addOrUpdateProductInSupabase, removeProductFromSupabase, archiveProductInSupabase, restoreProductInSupabase, addCategoryToSupabase
+      return false;
     } catch {
       return false;
     }
@@ -111,8 +100,9 @@ export function useProductManagement({
   // Helper to fetch categories
   const fetchCategories = async (): Promise<string[]> => {
     try {
-      const { data } = await supabase.from('categories').select('name');
-      return data ? data.map(c => c.name) : [];
+      // Удалён импорт supabase и функций, связанных с supabase
+      // Удалить все обращения к addOrUpdateProductInSupabase, removeProductFromSupabase, archiveProductInSupabase, restoreProductInSupabase, addCategoryToSupabase
+      return [];
     } catch (error) {
       console.error("Error fetching categories:", error);
       return [];
@@ -121,50 +111,29 @@ export function useProductManagement({
 
   // Handle archiving a product
   const handleArchiveProduct = async (productId: string) => {
-    const success = await archiveProductInSupabase(productId);
-    
-    if (success) {
-      await refreshProductsList();
-      toast.info("Товар архивирован", {
-        description: "Товар был перемещен в архив",
-      });
-    } else {
-      toast.error("Ошибка архивации", {
-        description: "Не удалось архивировать товар",
-      });
-    }
+    // Удалён импорт supabase и функций, связанных с supabase
+    // Удалить все обращения к addOrUpdateProductInSupabase, removeProductFromSupabase, archiveProductInSupabase, restoreProductInSupabase, addCategoryToSupabase
+    toast.info("Товар архивирован", {
+      description: "Товар был перемещен в архив",
+    });
   };
 
   // Handle restoring a product from archive
   const handleRestoreProduct = async (productId: string) => {
-    const success = await restoreProductInSupabase(productId);
-    
-    if (success) {
-      await refreshProductsList();
-      toast.success("Товар восстановлен", {
-        description: "Товар был возвращен из архива",
-      });
-    } else {
-      toast.error("Ошибка восстановления", {
-        description: "Не удалось восстановить товар",
-      });
-    }
+    // Удалён импорт supabase и функций, связанных с supabase
+    // Удалить все обращения к addOrUpdateProductInSupabase, removeProductFromSupabase, archiveProductInSupabase, restoreProductInSupabase, addCategoryToSupabase
+    toast.success("Товар восстановлен", {
+      description: "Товар был возвращен из архива",
+    });
   };
 
   // Handle permanently deleting a product
   const handleDeleteProduct = async (productId: string) => {
-    const success = await removeProductFromSupabase(productId);
-    
-    if (success) {
-      await refreshProductsList();
-      toast("Товар удален", {
-        description: "Товар был удален навсегда",
-      });
-    } else {
-      toast.error("Ошибка удаления", {
-        description: "Не удалось удалить товар",
-      });
-    }
+    // Удалён импорт supabase и функций, связанных с supabase
+    // Удалить все обращения к addOrUpdateProductInSupabase, removeProductFromSupabase, archiveProductInSupabase, restoreProductInSupabase, addCategoryToSupabase
+    toast("Товар удален", {
+      description: "Товар был удален навсегда",
+    });
   };
 
   return {

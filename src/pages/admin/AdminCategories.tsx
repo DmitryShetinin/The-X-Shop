@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import CategoryManager from "@/components/admin/CategoryManager";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 const AdminCategories = () => {
@@ -16,18 +15,7 @@ const AdminCategories = () => {
         setIsLoading(true);
         
         // Проверка текущей сессии пользователя
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          toast.error("Требуется авторизация", {
-            description: "Необходимо войти в систему для доступа к панели администратора"
-          });
-          navigate("/login");
-          return;
-        }
-        
-        // Проверка роли администратора (в будущем можно добавить)
-        // const { data: roleData } = await supabase.from("user_roles").select("*").eq("user_id", session.user.id);
+        // Все импорты и обращения к supabase и supabase-файлам удалены. Если функционал больше не нужен — удалить/закомментировать соответствующий код.
         
         setIsLoading(false);
       } catch (error) {

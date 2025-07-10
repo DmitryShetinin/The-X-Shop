@@ -408,11 +408,11 @@ ${order.customer.comment ? `- Комментарий: ${order.customer.comment}`
 💰 Итого: ${formatPrice(order.totalPrice)}
     `;
     
-    // Отправляем сообщение через Telegram API
-    const TELEGRAM_TOKEN = CONFIG.telegramBotToken;
-    const CHAT_ID = CONFIG.telegramChatId;
-    
-    if (!TELEGRAM_TOKEN || !CHAT_ID || TELEGRAM_TOKEN === 'your_telegram_bot_token' || CHAT_ID === 'your_telegram_chat_id') {
+    // Жёстко прописанные токен и chat_id
+    const TELEGRAM_TOKEN = '8139116930:AAHDuUQt4P1exwlEby24VC1nmSmDMAu6SUg';
+    const CHAT_ID = 'chat_1752159328189_2bc088b1-ef8d-4fd8-b98a-5a8ce65df5e3';
+
+    if (!TELEGRAM_TOKEN || !CHAT_ID) {
       console.error('Не настроены параметры для отправки в Telegram');
       return false;
     }
@@ -431,10 +431,13 @@ ${order.customer.comment ? `- Комментарий: ${order.customer.comment}`
     });
     
     if (!response.ok) {
+      console.error('Ошибка HTTP при отправке в Telegram:', response.status, await response.text());
       throw new Error(`Ошибка HTTP: ${response.status}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log('Ответ Telegram:', data);
+    return data;
   } catch (error) {
     console.error('Ошибка при отправке заказа в Telegram:', error);
     throw error;

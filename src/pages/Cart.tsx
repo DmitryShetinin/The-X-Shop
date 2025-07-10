@@ -12,13 +12,14 @@ import CartTable from "@/components/cart/CartTable";
 import DeliveryMethodSelector from "@/components/cart/DeliveryMethodSelector";
 import OrderSummary from "@/components/cart/OrderSummary";
 import { useAuth } from "@/context/AuthContext";
-import { sendOrderNotification } from "@/services/chatService";
+import {  sendToTelegram } from "@/services/chatService";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
-  
+ 
+
   const {
     items,
     deliveryMethod,
@@ -70,6 +71,8 @@ const Cart = () => {
   };
   
   const handleCheckout = async (formData) => {
+ 
+  
     if (items.length === 0) {
       toast({
         title: "Ошибка",
@@ -92,7 +95,7 @@ const Cart = () => {
     
     // Create order data object
     const orderData = {
-      user_id: profile?.id,
+      user_id: user.id.toString(),
       items,
       total,
       delivery_method: deliveryMethod.id,
@@ -147,15 +150,17 @@ const Cart = () => {
  
     // Clear the cart after successful order
     clearCart();
-    sendOrderNotification(result)
+   
+    // sendToTelegram(result)
     navigate("/thankYou");
     // Если пользователь авторизован, перенаправляем в личный кабинет на страницу заказов
-    if (profile) {
+    if (user) {
       toast({
         title: "Информация",
         description: "Вы можете отслеживать статус заказа в личном кабинете",
       });
       // Перенаправляем после небольшой задержки для чтения сообщения
+      console.log("Hello from handleSuccessfulOrder  ");
       sendOrderNotification(result)
       navigate("/thankYou");
   
@@ -216,6 +221,8 @@ const Cart = () => {
   );
 
   return (
+
+ 
     <div className="flex flex-col min-h-screen">
       <Navbar />
 

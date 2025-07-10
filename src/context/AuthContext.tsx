@@ -1,100 +1,138 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
-import { authMethods } from '@/utils/auth/authMethods';
-import { AuthResult, PasswordUpdateResult, ResetPasswordParams, UserProfileUpdate } from '@/utils/auth/types';
-import { UserProfile } from '@/types/auth';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useAuthCore } from '@/hooks/useAuthCore';
-import { useAuthMethods } from '@/hooks/useAuthMethods';
+import * as authService from '@/services/authService';
+ 
+import { hasRole as hasRoleApi } from '@/utils/roleUtils';
+import { API_BASE_URL } from '@/types/variables';
+
+// Тип пользователя (можно расширить по необходимости)
+type User = {
+  id: number;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  roles?: string[]; // Добавляем роли
+};
 
 type AuthContextType = {
-  session: Session | null;
   user: User | null;
-  profile: UserProfile | null;
   loading: boolean;
-  loginWithEmail: (email: string, password: string) => Promise<AuthResult>;
-  login: (email: string, password: string) => Promise<AuthResult>; // Alias for loginWithEmail
-  logout: () => Promise<AuthResult>;
-  register: (email: string, password: string, name?: string) => Promise<AuthResult>; // Alias for signupWithEmail
+  isLoading: boolean;
   isAuthenticated: boolean;
-  updatePassword: (newPassword: string) => Promise<PasswordUpdateResult>;
-  updateEmail: (newEmail: string) => Promise<AuthResult>;
-  sendPasswordResetEmail: (email: string) => Promise<AuthResult>;
-  resetPassword: (params: ResetPasswordParams) => Promise<AuthResult>;
-  signupWithEmail: (email: string, password: string, metadata?: { name?: string; }) => Promise<AuthResult>;
-  hasRole: (roleName: 'admin' | 'editor' | 'user') => Promise<boolean>;
-  updateProfile: (profileData: UserProfileUpdate) => Promise<boolean>;
-  isLoading: boolean; // Alias for loading
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, name?: string) => Promise<boolean>;
+  logout: () => void;
+  updateProfile?: (updates: Partial<User>) => void;
+  hasRole: (role: 'admin' | 'user' | 'editor') => Promise<boolean>;
 };
 
-const defaultContext: AuthContextType = {
-  session: null,
+const AuthContext = createContext<AuthContextType>({
   user: null,
-  profile: null,
   loading: true,
-  isLoading: true, // Alias for loading
-  loginWithEmail: async () => ({ success: false }),
-  login: async () => ({ success: false }), // Alias for loginWithEmail
-  logout: async () => ({ success: false }),
-  register: async () => ({ success: false }), // Alias for signupWithEmail
+  isLoading: true,
   isAuthenticated: false,
-  updatePassword: async () => ({ success: false }),
-  updateEmail: async () => ({ success: false }),
-  sendPasswordResetEmail: async () => ({ success: false }),
-  resetPassword: async () => ({ success: false }),
-  signupWithEmail: async () => ({ success: false }),
+  login: async () => false,
+  register: async () => false,
+  logout: () => {},
   hasRole: async () => false,
-  updateProfile: async () => false
-};
-
-const AuthContext = createContext<AuthContextType>(defaultContext);
+});
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { session, user, loading, setSession, setUser } = useAuthCore();
-  const { profile, setProfile, updateProfile } = useUserProfile(user);
-  const { 
-    loginWithEmail,
-    logout,
-    updatePassword,
-    sendPasswordResetEmail,
-    resetPassword,
-    signupWithEmail, 
-    hasRole,
-    updateEmail
-  } = useAuthMethods(setProfile);
-  
-  // Create a wrapper for register that adapts the parameter format
-  const register = async (email: string, password: string, name?: string) => {
-    const metadata = name ? { name } : undefined;
-    return await signupWithEmail(email, password, metadata);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Проверка токена при загрузке
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      authService.getMe(token)
+        .then(res => setUser(res.user))
+        .catch(() => setUser(null))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const res = await authService.login(email, password);
+      localStorage.setItem('auth_token', res.token);
+      setUser({
+        ...res.user,
+        roles: res.user.roles || [] // Добавляем роли в состояние
+      });
+      setLoading(false);
+      return true;
+    } catch (err) {
+      setUser(null);
+      setLoading(false);
+      return false;
+    }
   };
 
-  const value: AuthContextType = {
-    session,
-    user,
-    profile,
-    loading,
-    isLoading: loading, // Alias for loading
-    loginWithEmail,
-    login: loginWithEmail, // Alias for loginWithEmail
-    logout,
-    register, // Use the wrapper function
-    isAuthenticated: !!session,
-    updatePassword,
-    updateEmail,
-    sendPasswordResetEmail,
-    resetPassword,
-    signupWithEmail,
-    hasRole,
-    updateProfile
+  const register = async (email: string, password: string, name?: string) => {
+    setLoading(true);
+    try {
+      const res = await authService.register(email, password, name);
+      localStorage.setItem('auth_token', res.token);
+      setUser(res.user);
+      setLoading(false);
+      return true;
+    } catch (err) {
+      setUser(null);
+      setLoading(false);
+      return false;
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('auth_token');
+    setUser(null);
+  };
+
+  const updateProfile = (updates: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...updates } : prev);
+  };
+
+  const hasRole = async (role: 'admin' | 'user' | 'editor') => {
+    console.log("Hello from hasRole  1")
+    if (!user?.id) return false;
+    const token = localStorage.getItem('auth_token');
+    if (!token) return false;
+    try {
+      const response = await fetch(`${API_BASE_URL}/has-role`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ user_id: user.id, role })
+      });
+      if (!response.ok) return false;
+      const data = await response.json();
+      return !!data.has_role;
+    } catch (e) {
+      console.error('Ошибка проверки роли:', e);
+      return false;
+    }
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      isLoading: loading,
+      isAuthenticated: !!user,
+      login,
+      register,
+      logout,
+      updateProfile,
+      hasRole,
+    }}>
       {children}
     </AuthContext.Provider>
   );

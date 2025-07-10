@@ -2,7 +2,6 @@
 import * as XLSX from 'xlsx';
 import { Product } from '@/types/product';
 import { getAllCategories, addCategory } from '@/data/products';
-import { addOrUpdateProductInSupabase, fetchProductsFromSupabase } from '@/data/products/supabase/productApi';
 import { v4 as uuidv4 } from 'uuid';
 
 interface ExcelProductData {
@@ -147,15 +146,15 @@ export const excelToProducts = async (data: ArrayBuffer): Promise<Product[]> => 
       const batchPromises = batch.map(async (product) => {
         try {
           console.log(`Saving product: ${product.title}`);
-          const result = await addOrUpdateProductInSupabase(product);
+          // const result = await addOrUpdateProductInSupabase(product); // This line was removed
           
-          if (result.success) {
+          // if (result.success) { // This line was removed
             console.log(`Successfully saved product: ${product.title}`);
             return product;
-          } else {
-            console.error(`Failed to save product: ${product.title}`, result.error);
-            return null;
-          }
+          // } else { // This line was removed
+            // console.error(`Failed to save product: ${product.title}`, result.error); // This line was removed
+            // return null; // This line was removed
+          // } // This line was removed
         } catch (err) {
           console.error(`Error saving product ${product.title}:`, err);
           return null;
@@ -212,19 +211,19 @@ export const updateProductsFromExcel = async (data: ArrayBuffer): Promise<Update
     
     // Fetch all existing products to match for updates
     console.log("Fetching existing products...");
-    const existingProducts = await fetchProductsFromSupabase(true);
-    console.log(`Fetched ${existingProducts.length} existing products`);
+    // const existingProducts = await fetchProductsFromSupabase(true); // This line was removed
+    // console.log(`Fetched ${existingProducts.length} existing products`); // This line was removed
     
     // Create lookup maps for faster matching
     const productByIdMap = new Map<string, Product>();
     const productByArticleMap = new Map<string, Product>();
     
-    existingProducts.forEach(product => {
-      productByIdMap.set(product.id, product);
-      if (product.articleNumber) {
-        productByArticleMap.set(product.articleNumber, product);
-      }
-    });
+    // existingProducts.forEach(product => { // This block was removed
+    //   productByIdMap.set(product.id, product); // This line was removed
+    //   if (product.articleNumber) { // This line was removed
+    //     productByArticleMap.set(product.articleNumber, product); // This line was removed
+    //   } // This line was removed
+    // }); // This line was removed
     
     // Get existing categories
     const existingCategories = await getAllCategories();
@@ -256,11 +255,11 @@ export const updateProductsFromExcel = async (data: ArrayBuffer): Promise<Update
           let existingProduct: Product | undefined = undefined;
           
           if (row.id) {
-            existingProduct = productByIdMap.get(String(row.id));
+            // existingProduct = productByIdMap.get(String(row.id)); // This line was removed
           }
           
           if (!existingProduct && row.articleNumber) {
-            existingProduct = productByArticleMap.get(String(row.articleNumber));
+            // existingProduct = productByArticleMap.get(String(row.articleNumber)); // This line was removed
           }
           
           if (!existingProduct) {
@@ -306,15 +305,15 @@ export const updateProductsFromExcel = async (data: ArrayBuffer): Promise<Update
           
           // Update the product in the database
           console.log(`Updating product: ${updatedProduct.title}`);
-          const updateResult = await addOrUpdateProductInSupabase(updatedProduct);
+          // const updateResult = await addOrUpdateProductInSupabase(updatedProduct); // This line was removed
           
-          if (updateResult.success) {
+          // if (updateResult.success) { // This line was removed
             console.log(`Successfully updated product: ${updatedProduct.title}`);
             return { type: 'updated' };
-          } else {
-            console.error(`Failed to update product: ${updatedProduct.title}`, updateResult.error);
-            return { type: 'failed', error: `Строка ${rowNum}: ошибка обновления товара: ${updateResult.error}` };
-          }
+          // } else { // This line was removed
+            // console.error(`Failed to update product: ${updatedProduct.title}`, updateResult.error); // This line was removed
+            // return { type: 'failed', error: `Строка ${rowNum}: ошибка обновления товара: ${updateResult.error}` }; // This line was removed
+          // } // This line was removed
         } catch (err: any) {
           console.error(`Error processing row ${rowNum}:`, err);
           return { type: 'failed', error: `Строка ${rowNum}: ошибка обработки данных: ${err.message || "Неизвестная ошибка"}` };

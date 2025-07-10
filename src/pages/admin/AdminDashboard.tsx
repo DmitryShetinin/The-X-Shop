@@ -5,7 +5,7 @@ import { ShoppingCart, Package, Users, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { getActiveProducts } from "@/data/products";
-import { supabase } from "@/integrations/supabase/client";
+// import { supabase } from "@/integrations/supabase/client";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -22,25 +22,25 @@ const AdminDashboard = () => {
         const products = await getActiveProducts();
         
         // Get orders that are not archived
-        const { data: orders, error: ordersError } = await supabase
-          .from('orders')
-          .select('*')
-          .not('status', 'eq', 'archived');
+        // const { data: orders, error: ordersError } = await supabase
+        //   .from('orders')  
+        //   .select('*')
+        //   .not('status', 'eq', 'archived');
           
-        if (ordersError) throw ordersError;
+        // if (ordersError) throw ordersError;
         
         // Get distinct customers count
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id');
+        // const { data: profiles, error: profilesError } = await supabase
+        //   .from('profiles')
+        //   .select('id');
           
-        if (profilesError) throw profilesError;
+        // if (profilesError) throw profilesError;
         
         // Calculate stats
         const totalProducts = products.length;
-        const totalOrders = orders ? orders.length : 0;
-        const totalCustomers = profiles ? profiles.length : 0;
-        const totalRevenue = orders ? orders.reduce((sum, order) => sum + Number(order.total), 0) : 0;
+        const totalOrders = 0; // Все обращения к supabase удалены. Временно убрана загрузка orders и profiles.
+        const totalCustomers = 0; // Все обращения к supabase удалены. Временно убрана загрузка orders и profiles.
+        const totalRevenue = 0; // Все обращения к supabase удалены. Временно убрана загрузка orders и profiles.
         
         setStats({
           totalProducts,

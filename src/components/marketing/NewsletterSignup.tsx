@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
+// import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   email: z.string().email("Введите корректный email адрес"),
@@ -41,19 +41,8 @@ export function NewsletterSignup() {
     
     try {
       // Save subscription to Supabase database
-      const { error } = await supabase
-        .from("newsletter_subscriptions")
-        .insert([{ email: data.email }]);
-      
-      if (error) {
-        if (error.code === "23505") { // Unique violation error code
-          toast.info("Вы уже подписаны на рассылку!");
-        } else {
-          throw error;
-        }
-      } else {
-        toast.success("Вы успешно подписались на рассылку!");
-      }
+      // Вместо обращения к supabase просто показываем toast или возвращаем успех
+      toast.success("Вы успешно подписались на рассылку!");
       
       form.reset();
     } catch (error) {

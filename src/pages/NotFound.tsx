@@ -3,7 +3,6 @@ import { useLocation, Link, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const NotFound = () => {
   const location = useLocation();
@@ -20,18 +19,11 @@ const NotFound = () => {
         setIsRedirecting(true);
         // This helps clean up any potential token issues
         try {
-          const { data, error } = await supabase.auth.getSession();
-          if (data?.session) {
-            console.log("Session recovered from hash params");
-            // Determine where to redirect based on potential patterns in the URL
-            if (location.pathname.includes('admin')) {
-              setRedirectPath("/admin");
-            } else {
-              setRedirectPath("/account");
-            }
+          // const { data, error } = await supabase.auth.getSession();
+          if (location.pathname.includes('admin')) {
+            setRedirectPath("/admin");
           } else {
-            console.error("Failed to get session from hash params:", error);
-            setIsRedirecting(false);
+            setRedirectPath("/account");
           }
         } catch (e) {
           console.error("Error processing auth callback on 404 page:", e);

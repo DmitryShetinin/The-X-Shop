@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/card";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { useAuth } from "@/context/AuthContext";
+import { requestPasswordReset } from "@/services/passwordService";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Введите корректный email"),
@@ -35,10 +35,10 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 const ForgotPassword = () => {
-  const { sendPasswordResetEmail } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -49,12 +49,13 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsLoading(true);
+    setError(null);
     try {
-      const result = await sendPasswordResetEmail(data.email);
-      if (result.success) {
-        setIsSuccess(true);
-        form.reset();
-      }
+      await requestPasswordReset(data.email);
+      setIsSuccess(true);
+      form.reset();
+    } catch (err: any) {
+      setError(err.message || "Ошибка запроса");
     } finally {
       setIsLoading(false);
     }
@@ -126,6 +127,9 @@ const ForgotPassword = () => {
                   Отправить еще раз
                 </Button>
               </div>
+            )}
+            {error && (
+              <div className="text-red-500 text-sm text-center mt-2">{error}</div>
             )}
           </CardContent>
           

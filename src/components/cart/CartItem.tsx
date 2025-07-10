@@ -39,13 +39,14 @@ const CartItem = ({ item, updateQuantity, removeItem }: CartItemProps) => {
 
   const price = getItemPrice();
   const totalPrice = price * item.quantity;
-
+  console.log("item.product")
+  console.log(item.product)
   return (
     <tr key={item.product.id} className="border-t">
       <td className="p-4">
         <div className="flex items-center gap-4">
           <img 
-            src={item.product.imageUrl} 
+            src={`images/${item.product.image_url}` || 'not-found.jpg'}
             alt={item.product.title} 
             className="w-16 h-16 object-cover rounded" 
           />
