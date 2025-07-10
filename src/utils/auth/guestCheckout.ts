@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { generatePassword } from "./passwordUtils";
 import { toast } from "sonner";
@@ -102,6 +103,7 @@ export async function handleGuestCheckout(email: string, name: string): Promise<
 async function sendWelcomeEmail(email: string, name: string, password: string): Promise<void> {
   // In a real application, you would use an email service like SendGrid, Mailgun, etc.
   // For now, we'll just log the message
+  console.log(`Welcome email would be sent to ${email} with password ${password}`);
   
   // Placeholder for email sending functionality
   // This would be replaced with actual email sending code

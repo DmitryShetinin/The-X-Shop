@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Download, FileUp, Edit } from "lucide-react";
 import { exportProductsToExcel, createProductTemplate } from "@/utils/excelUtils";
+import { excelToProducts, updateProductsFromExcel } from "@/utils/excel/excelImport";
 import { fetchProductsFromSupabase } from '@/data/products/supabase/productApi';
 import { Progress } from "@/components/ui/progress";
 import { 
@@ -87,11 +89,9 @@ const ProductImportExport = ({ onImportComplete }: ProductImportExportProps) => 
           let message = '';
           
           if (mode === 'add') {
-            const { excelToProducts } = await import("@/utils/excel/excelImport");
             const products = await excelToProducts(data);
             message = `Импортировано ${products.length} товаров`;
           } else {
-            const { updateProductsFromExcel } = await import("@/utils/excel/excelImport");
             const result = await updateProductsFromExcel(data);
             message = `Обновлено ${result.updated} товаров`;
           }

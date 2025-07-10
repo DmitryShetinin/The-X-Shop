@@ -1,4 +1,4 @@
- 
+
 import { Product } from "@/types/product";
 import ProductCard from "./ProductCard";
 import { Button } from "../ui/button";
@@ -34,7 +34,7 @@ const ProductGrid = ({
     }
     return products.slice(0, limit);
   }, [products, limit, expanded]);
- 
+  
   if (products.length === 0) {
     return (
       <div className="py-12 text-center">

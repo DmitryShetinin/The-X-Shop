@@ -16,7 +16,8 @@ const RelatedProducts: React.FC<RelatedProductsProps> = ({ products, currentProd
     : products;
     
   if (filteredProducts.length === 0) return null;
-  
+  console.log(RelatedProducts)
+  console.log(filteredProducts)
   // Отслеживаем показ раздела "Похожие товары"
   useEffect(() => {
     if (filteredProducts.length > 0) {

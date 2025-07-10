@@ -14,7 +14,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ mainImage, additionalImages
   
   const allImages = [mainImage, ...additionalImages].filter(Boolean);
   const currentImage = allImages[currentImageIndex] || "/placeholder.svg";
-
+ 
   return (
     <>
       {/* Main image display */}
@@ -40,7 +40,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ mainImage, additionalImages
               onClick={() => setCurrentImageIndex(index)}
             >
               <img 
-                src={img} 
+                src={`images/${img}`} 
                 alt={`Product thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
                 loading="lazy"

@@ -1,50 +1,35 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from '@/types/chat';
 import { getMessages, markMessagesAsRead } from '@/services/chatService';
-import { useAuth } from '@/context/AuthContext';
 
 export const useChatMessages = (isOpen: boolean) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { profile } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Helper function to fetch messages with safety checks
-  const fetchMessages = useCallback(async () => {
-    // Don't fetch if profile is not loaded or email is missing
-    if (!profile || !profile.email) {
-      return [];
-    }
-
-    setIsLoading(true);
+  // Helper function to fetch messages
+  const fetchMessages = async () => {
     try {
-      const newMessages = await getMessages();
-      if (newMessages && Array.isArray(newMessages)) {
-        setMessages(newMessages);
+      const msgs = await getMessages();
+      if (msgs && msgs.length > 0) {
+        setMessages(msgs);
         
-        // Calculate unread count
-        const unread = newMessages.filter(msg => !msg.is_read && !msg.is_from_admin).length;
-        setUnreadCount(unread);
-        
-        return newMessages;
+        // Count unread messages from admin
+        const newUnreadCount = msgs.filter(m => m.is_from_admin && !m.is_read).length;
+        setUnreadCount(newUnreadCount);
       }
-      return [];
     } catch (error) {
-      return [];
-    } finally {
-      setIsLoading(false);
+      console.error("Error fetching messages:", error);
     }
-  }, [profile]); // Add profile as dependency
+  };
 
-  // Initial fetch on component mount or when profile loads
+  // Initial fetch on component mount
   useEffect(() => {
-    if (profile?.email) {
-      fetchMessages();
-    }
-  }, [fetchMessages, profile]);
+    fetchMessages();
+  }, []);
 
-  // Scroll to bottom when messages change or chat opens
+  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current && isOpen) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -70,22 +55,16 @@ export const useChatMessages = (isOpen: boolean) => {
     }
   }, [isOpen, unreadCount]);
 
-  // Poll for new messages only when chat is active
+  // Poll for new messages periodically
   useEffect(() => {
-    if (!profile?.email) return;
-
-    const interval = setInterval(() => {
-      fetchMessages();
-    }, 10000);
-    
+    const interval = setInterval(fetchMessages, 10000);
     return () => clearInterval(interval);
-  }, [fetchMessages, profile]);
+  }, []);
 
   return {
     messages,
     unreadCount,
     messagesEndRef,
-    fetchMessages,
-    isLoading
+    fetchMessages
   };
 };

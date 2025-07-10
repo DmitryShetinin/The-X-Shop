@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -26,6 +27,7 @@ export function useUserProfile(user: User | null) {
         .single();
       
       if (error) {
+        console.error("Error fetching profile:", error);
         return;
       }
       
@@ -50,6 +52,7 @@ export function useUserProfile(user: User | null) {
         setProfile(userProfile);
       }
     } catch (error) {
+      console.error("Error fetching profile:", error);
     }
   };
   
@@ -74,6 +77,7 @@ export function useUserProfile(user: User | null) {
         .upsert(updates);
         
       if (error) {
+        console.error("Error updating profile:", error);
         return false;
       }
       
@@ -92,6 +96,7 @@ export function useUserProfile(user: User | null) {
       
       return true;
     } catch (error) {
+      console.error("Error updating profile:", error);
       return false;
     }
   };

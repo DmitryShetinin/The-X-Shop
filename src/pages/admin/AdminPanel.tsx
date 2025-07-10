@@ -1,5 +1,5 @@
 
-import { Routes, Route, Navigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useState } from "react";
 import AdminAuth from "@/components/admin/AdminAuth";
 import AdminDashboard from "./AdminDashboard";
@@ -53,11 +53,12 @@ const AdminPanel = () => {
                 {navigation.map((item) => (
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton asChild>
-                      <Link to={item.href}
+                      <a
+                        href={item.href}
                         className="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors"
                       >
                         {item.name}
-                      </Link>
+                      </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

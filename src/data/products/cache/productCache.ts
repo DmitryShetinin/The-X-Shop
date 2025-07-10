@@ -1,4 +1,5 @@
-import { fetchProductsFromSupabase } from "../supabase/productApi";
+import { fetchProductsFromPostgres } from "../postgres/productApi";
+ 
 import { Product } from "@/types/product";
 
 // Кэш продуктов
@@ -25,7 +26,7 @@ export const refreshCacheIfNeeded = async (force = false): Promise<void> => {
   }
   
   try {
-    const products = await fetchProductsFromSupabase();
+    const products = await fetchProductsFromPostgres();
     productsCache = products;
     lastCacheUpdate = now;
   } catch (error) {

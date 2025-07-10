@@ -1,7 +1,8 @@
 
+import { Category } from '@/data/products';
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Category } from '@/data/products/categoryData';
+ 
 
 interface CategoriesSectionProps {
   categoryObjects: Category[];
@@ -9,6 +10,8 @@ interface CategoriesSectionProps {
 }
 
 const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categoryObjects, loading }) => {
+    console.log("categoryObjects")
+  console.log(categoryObjects)
   return (
     <section className="py-12">
       <div className="container px-4 md:px-6">
@@ -38,7 +41,7 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categoryObjects, 
                     itemProp="image"
                     alt={category.name}
                     className="absolute top-0 left-0 h-full w-full object-cover transition-transform group-hover:scale-105"
-                    src={category.imageUrl}
+                    src={`images/${category.image_url}` || 'not-found.jpg'}
                     loading="lazy"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "/placeholder.svg";

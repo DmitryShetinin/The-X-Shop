@@ -1,6 +1,6 @@
 import { Product } from '@/types/product';
-
-const API_BASE_URL = 'http://localhost:3001/api';
+import { API_BASE_URL } from '@/types/variables';
+ 
 
 // Получить все товары из API
 export const fetchProductsFromPostgres = async (): Promise<Product[]> => {
