@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/auth";
 
@@ -38,6 +39,7 @@ export async function createUserProfile(profileData: {
       ]);
 
     if (error) {
+      console.error("Error creating user profile:", error);
       return { success: false, error };
     }
 
@@ -67,6 +69,7 @@ export async function createUserProfile(profileData: {
 
     return { success: true };
   } catch (error) {
+    console.error("Unexpected error creating profile:", error);
     return { success: false, error };
   }
 }
@@ -90,11 +93,13 @@ export async function updateUserProfile(profileData: Partial<UserProfile> & { id
       .eq("id", profileData.id);
 
     if (error) {
+      console.error("Error updating user profile:", error);
       return { success: false, error };
     }
 
     return { success: true };
   } catch (error) {
+    console.error("Unexpected error updating profile:", error);
     return { success: false, error };
   }
 }
@@ -110,6 +115,7 @@ export const loadUserProfile = async (userId: string) => {
       .single();
 
     if (profileError) {
+      console.error('Ошибка при загрузке профиля:', profileError);
       return { profile: null, roles: [] };
     }
 
@@ -120,6 +126,7 @@ export const loadUserProfile = async (userId: string) => {
       .eq('user_id', userId);
 
     if (rolesError) {
+      console.error('Ошибка при загрузке ролей:', rolesError);
       return { profile: null, roles: [] };
     }
 
@@ -152,6 +159,7 @@ export const loadUserProfile = async (userId: string) => {
         }
         isSuperAdmin = true;
       } catch (error) {
+        console.error('Ошибка при добавлении роли админа:', error);
       }
     }
 
@@ -185,6 +193,7 @@ export const loadUserProfile = async (userId: string) => {
 
     return { profile: fullProfile, roles };
   } catch (error) {
+    console.error('Ошибка при загрузке профиля:', error);
     return { profile: null, roles: [] };
   }
 };

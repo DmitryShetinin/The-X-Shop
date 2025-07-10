@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,8 +40,6 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-
- 
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -62,12 +60,6 @@ const Login = () => {
       password: "",
     },
   });
-  const location = useLocation();
-  const redirect = location.state?.from?.pathname || 
-                  new URLSearchParams(location.search).get('redirect') || 
-                  '/account';
-
- 
 
   // Helper function to extract error message
   const getErrorMessage = (error: string | { message?: string } | undefined): string => {
@@ -93,7 +85,7 @@ const Login = () => {
         });
 
         // Use window.location for a clean page refresh to avoid state conflicts
-        navigate(redirect, { replace: true });
+        window.location.href = "/account";
       } else {
         toast.error("Ошибка авторизации", {
           description: getErrorMessage(result.error),
@@ -110,34 +102,29 @@ const Login = () => {
   };
 
   const handleSocialLogin = async (provider: Provider) => {
-  setIsFormLoading(true);
-  try {
-    cleanupAuthState();
-    
-    // Сохраняем текущий URL для редиректа после авторизации
-    localStorage.setItem('pre_auth_url', window.location.href);
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent'
+    setIsFormLoading(true);
+    try {
+      // Clean up any existing auth state
+      cleanupAuthState();
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
         }
+      });
+      
+      if (error) {
+        throw error;
       }
-    });
-    
-    if (error) throw error;
-    
-  } catch (error: any) {
-    console.error(`Ошибка авторизации через ${provider}:`, error);
-    toast.error("Ошибка входа через социальную сеть", {
-      description: error.message || "Произошла ошибка при входе через социальную сеть",
-    });
-    setIsFormLoading(false);
-  }
-};
+    } catch (error: any) {
+      console.error(`Ошибка авторизации через ${provider}:`, error);
+      toast.error("Ошибка входа через социальную сеть", {
+        description: error.message || "Произошла ошибка при входе через социальную сеть",
+      });
+      setIsFormLoading(false);
+    }
+  };
 
   // Show loading while auth is being checked
   if (isLoading) {

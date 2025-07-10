@@ -3,8 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
- 
 
 interface ChatInputProps {
   onSendMessage: (message: string) => Promise<void>;
@@ -12,9 +10,9 @@ interface ChatInputProps {
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isSending }) => {
-  const { profile, updateProfile } = useAuth();
   const [message, setMessage] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
   // Focus input when component mounts
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -31,9 +29,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isSending }) => {
     
     console.log('Sending message:', messageToSend);
     setMessage('');
- 
+    
     try {
- 
       await onSendMessage(messageToSend);
       console.log('Message sent successfully');
       
@@ -63,7 +60,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isSending }) => {
   const handleButtonInteraction = async (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
- 
+    
     if (!message.trim() || isSending) return;
     
     console.log('Button interaction triggered');

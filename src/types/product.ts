@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   title: string;
@@ -11,7 +12,6 @@ export interface Product {
   videoType?: 'mp4' | 'vk' | 'youtube';
   rating: number;
   inStock: boolean;
-  in_stock?: boolean; // Raw database field for direct access
   colors?: string[];
   sizes?: string[];
   countryOfOrigin: string;
