@@ -51,7 +51,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.stopPropagation();
     toggleWishlistItem(product);
   };
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+>>>>>>> 6e604e8cedb666541ef11c5a58fa15d974de0236
 
   // Проверка наличия товара на основе in_stock
   const isInStock = () => {
@@ -84,9 +88,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
     ? currentProduct.colorVariants.find(v => v.color === selectedColor)
     : undefined;
    
+<<<<<<< HEAD
  
   
  
+=======
+  console.log("11111111111")
+  console.log(product);
+=======
+   console.log(currentProduct)
+>>>>>>> recover
+>>>>>>> 6e604e8cedb666541ef11c5a58fa15d974de0236
   return (
     <div className={`group relative bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 ${className}`}
          itemScope itemType="https://schema.org/Product">
@@ -101,10 +113,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <Link to={`/product/${product.id}`} className="block" itemProp="url">
         <AspectRatio ratio={compact ? 1 : 3/4} className="overflow-hidden rounded-t-lg bg-gray-50">
           <img
+<<<<<<< HEAD
  
             src={`/images/${product.image_url}`}
  
     
+=======
+<<<<<<< HEAD
+            src={`/images/${product.image_url}`}
+=======
+            src={`/images/${currentProduct.image_url}`}
+>>>>>>> recover
+>>>>>>> 6e604e8cedb666541ef11c5a58fa15d974de0236
             alt={product.title}
             className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-200"
             loading="lazy"
