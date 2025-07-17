@@ -74,7 +74,7 @@ const ProductTableRow = ({
   const handleStockEditorClose = () => {
     setEditingStockId(false);
   };
-
+  console.log(product)
   return (
     <TableRow>
       {onSelectProduct && (
@@ -90,7 +90,7 @@ const ProductTableRow = ({
       <TableCell>
         <div className="w-12 h-12 border rounded overflow-hidden">
           <img 
-            src={product.imageUrl} 
+            src={`/images/${product.image_url}`} 
             alt={product.title}
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -111,13 +111,13 @@ const ProductTableRow = ({
       <TableCell>
         {product.discountPrice ? (
           <div>
-            <span className="font-medium">{product.discountPrice.toLocaleString()}</span>{" "}
+            <span className="font-medium">{`${product.discountPrice.toLocaleString()}₽`}</span>{" "}
             <span className="text-muted-foreground line-through text-sm">
-              {product.price.toLocaleString()}
+              {`${product.price.toLocaleString()}₽`}
             </span>
           </div>
         ) : (
-          product.price.toLocaleString()
+          product.price.toLocaleString() + "₽"
         )}
       </TableCell>
       <TableCell>
@@ -133,13 +133,13 @@ const ProductTableRow = ({
             className="px-2 h-7"
             onClick={startEditStock}
           >
-            {product.stockQuantity !== undefined ? product.stockQuantity : "-"}
+            {product.stock_quantity !== undefined ? product.stock_quantity : "-"}
           </Button>
         )}
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
-          {product.inStock ? (
+          {product.stock_quantity != 0 ? (
             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
               В наличии
             </span>

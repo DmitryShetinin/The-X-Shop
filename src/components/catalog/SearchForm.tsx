@@ -36,7 +36,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   handleSearchChange,
   handleSearchSubmit,
   loading,
-  priceRange = { min: 0, max: 500000000 },
+  priceRange = { min: 0, max: 100000 },
   onPriceRangeChange,
   selectedCategory,
   onCategoryChange,
@@ -64,7 +64,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   ];
 
   const handleClearFilters = useCallback(() => {
-    if (onPriceRangeChange) onPriceRangeChange({ min: 0, max: 500000000 });
+    if (onPriceRangeChange) onPriceRangeChange({ min: 0, max: 100000 });
     if (onCategoryChange) onCategoryChange(null);
     if (onInStockChange) onInStockChange(false);
     if (onSortChange) onSortChange("relevance");
@@ -87,7 +87,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
   const hasActiveFilters = 
     priceRange.min > 0 || 
-    priceRange.max < 500000000 || 
+    priceRange.max < 100000 || 
     selectedCategory || 
     inStockOnly || 
     sortBy !== "relevance" ||
@@ -339,10 +339,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                 </label>
                 <Input
                   type="number"
-                  placeholder="50000"
-                  value={priceRange.max === 500000000 ? "" : priceRange.max}
+                  placeholder="100000"
+                  value={priceRange.max === 100000 ? "" : priceRange.max}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value) || 500000000;
+                    const value = parseInt(e.target.value) || 100000;
                     onPriceRangeChange?.({ ...priceRange, max: value });
                   }}
                   className="h-9"
@@ -395,7 +395,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                     От {formatPrice(priceRange.min)}
                   </Badge>
                 )}
-                {priceRange.max < 500000000 && (
+                {priceRange.max < 100000 && (
                   <Badge variant="secondary" className="text-xs">
                     До {formatPrice(priceRange.max)}
                   </Badge>

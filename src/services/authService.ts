@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/types/variables";
-import { hasRole, checkAccess } from '@/utils/roleUtils';
+ 
 
 export async function login(email: string, password: string) {
   const res = await fetch(`${API_BASE_URL}/auth/login`, {

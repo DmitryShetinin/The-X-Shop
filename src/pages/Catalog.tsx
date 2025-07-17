@@ -11,25 +11,35 @@ import { useCatalogData } from "@/hooks/useCatalogData";
 import { useProductFiltering } from "@/hooks/useProductFiltering";
 import { useActiveFilters } from "@/hooks/useCatalog/useActiveFilters";
 import { useUrlParams } from "@/hooks/useCatalog/useUrlParams";
+import { Category } from "@/data/products";
+ 
 
 const Catalog = () => {
+
+  // Загрузка данных каталога
   const [searchParams, setSearchParams] = useSearchParams();
+  const categoryParam = searchParams.get("category");
+  const { allProducts, availableCategories, categoryObjects, loading } = useCatalogData(categoryParam);
+  console.log(allProducts)
+  // Вычисляем максимальную цену среди всех товаров
+  const allPrices = allProducts.map(p => p.discountPrice || p.price || 0);
+  // const maxAllowedPrice = allPrices.length ? Math.max(...allPrices) : 100000;
+  const urlParams = useUrlParams(searchParams, setSearchParams, allPrices.length ? Math.max(...allPrices) : 100000);
   const { 
-    categoryParam, 
     searchParam, 
     colorParam, 
     priceRange, 
     setPriceRange, 
     updatePriceInUrl 
-  } = useUrlParams(searchParams, setSearchParams);
+  } = urlParams;
   
   const [searchTerm, setSearchTerm] = useState(searchParam || "");
   const [sortBy, setSortBy] = useState("in-stock");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Загрузка данных каталога
-  const { allProducts, availableCategories, categoryObjects, loading } = useCatalogData(categoryParam);
-  
+ 
+
+
   // Фильтрация и сортировка продуктов
   const { filteredProducts, availableColors, inStockCount, outOfStockCount } = useProductFiltering({
     allProducts,
@@ -121,13 +131,16 @@ const Catalog = () => {
   
   const handleClearAllFilters = () => {
     setSearchParams(new URLSearchParams());
-    setPriceRange({ min: 0, max: 500000000 });
+    setPriceRange({ min: 0, max: priceRange.max });
     setSearchTerm("");
   };
 
   // Находим объект категории по имени
-  const findCategoryByName = (name: string) => {
-    return categoryObjects.find(cat => cat.name === name) || { name, imageUrl: "/placeholder.svg" };
+  const findCategoryByName = (name: string): Category => {
+    return (
+      categoryObjects.find(cat => cat.name === name) ||
+      { id: "unknown", name, imageUrl: "/placeholder.svg" }
+    );
   };
   
   // Готовим мета-информацию в зависимости от фильтров
@@ -147,7 +160,7 @@ const Catalog = () => {
     
     return { title, description };
   };
-  
+   
   const seoData = getSEOData();
 
   return (

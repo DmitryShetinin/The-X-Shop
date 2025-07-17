@@ -13,8 +13,10 @@ interface UseUrlParamsResult {
 
 export const useUrlParams = (
   searchParams: URLSearchParams, 
-  setSearchParams: (nextInit: URLSearchParamsInit) => void
+  setSearchParams: (nextInit: URLSearchParamsInit) => void, 
+  maxAllowedPrice: number
 ): UseUrlParamsResult => {
+  console.log(maxAllowedPrice)
   const categoryParam = searchParams.get("category");
   const searchParam = searchParams.get("search");
   const colorParam = searchParams.get("color");
@@ -25,13 +27,13 @@ export const useUrlParams = (
   
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({
     min: minPriceParam ? parseInt(minPriceParam, 10) : 0,
-    max: maxPriceParam ? parseInt(maxPriceParam, 10) : 500000000,
+    max: maxPriceParam ? parseInt(maxPriceParam, 10) : maxAllowedPrice,
   });
   
   // Update URL when price range changes
   const updatePriceInUrl = useCallback(() => {
     const minPriceChanged = priceRange.min > 0;
-    const maxPriceChanged = priceRange.max !== 500000000;
+    const maxPriceChanged = priceRange.max !== maxAllowedPrice;
     
     if (minPriceChanged) {
       searchParams.set("minPrice", priceRange.min.toString());

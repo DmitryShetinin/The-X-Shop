@@ -5,10 +5,22 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
+const multer = require('multer');
+const WebSocket = require('ws');
+const http = require('http');
 
+const fs = require('fs');
+const fsp = fs.promises; // Для асинхронных операций
 const app = express();
 const port = 3001;
-const fs = require('fs'); 
+const server = http.createServer(app);
+
+const imagesDir = path.join(__dirname, '../public/images'); // ← ключевое изменение!
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir, { recursive: true });
+}
+ 
+
 const authRouter = require('./auth');
 // Middleware
 app.use(cors());
@@ -383,10 +395,521 @@ app.post('/api/assign-role', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-     console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-     console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
-   console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-    console.log('✅ PostgreSQL connected successfully');
-  console.log(`🚀 API server running on http://localhost:${port}`);
-}); 
+// Получить всех пользователей
+app.get('/api/users', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM users');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('❌ API: Ошибка получения пользователей:', error);
+    res.status(500).json({ error: 'Ошибка при получении пользователей' });
+  }
+});
+
+// Создать товар
+app.post('/api/products', async (req, res) => {
+  try {
+    const product = req.body;
+    const { v4: uuidv4 } = require('uuid');
+    const id = product.id || uuidv4();
+    const insertQuery = `
+      INSERT INTO products (
+        id, title, description, price, discount_price, category, image_url, additional_images, rating, in_stock, colors, sizes, country_of_origin, specifications, is_new, is_bestseller, article_number, barcode, stock_quantity, color_variants, archived, video_url, video_type, material, model_name
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
+      ) RETURNING *
+    `;
+    const values = [
+      id,
+      product.title,
+      product.description,
+      product.price,
+      product.discountPrice || product.discount_price,
+      product.category,
+      product.imageUrl || product.image_url,
+      JSON.stringify(product.additionalImages || product.additional_images || []),
+      product.rating,
+      product.inStock !== undefined ? product.inStock : true,
+      JSON.stringify(product.colors || []),
+      JSON.stringify(product.sizes || []),
+      product.countryOfOrigin || product.country_of_origin,
+      JSON.stringify(product.specifications || {}),
+      product.isNew || false,
+      product.isBestseller || false,
+      product.articleNumber || product.article_number,
+      product.barcode,
+      product.stockQuantity || product.stock_quantity || 0,
+      JSON.stringify(product.colorVariants || product.color_variants || []),
+      product.archived || false,
+      product.videoUrl || '',
+      product.videoType || '',
+      product.material || '',
+      product.modelName || ''
+    ];
+    const result = await pool.query(insertQuery, values);
+    res.status(201).json(parseProductRow(result.rows[0]));
+  } catch (error) {
+    console.error('❌ API: Error creating product:', error);
+    res.status(500).json({ error: 'Ошибка при создании товара' });
+  }
+});
+
+// Обновить товар
+app.put('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = req.body;
+    const updateQuery = `
+      UPDATE products SET
+        title = $2, description = $3, price = $4, discount_price = $5, category = $6, image_url = $7, additional_images = $8, rating = $9, in_stock = $10, colors = $11, sizes = $12, country_of_origin = $13, specifications = $14, is_new = $15, is_bestseller = $16, article_number = $17, barcode = $18, stock_quantity = $19, color_variants = $20, archived = $21, video_url = $22, video_type = $23, material = $24, model_name = $25
+      WHERE id = $1 RETURNING *
+    `;
+    const values = [
+      id,
+      product.title,
+      product.description,
+      product.price,
+      product.discountPrice || product.discount_price,
+      product.category,
+      product.imageUrl || product.image_url,
+      JSON.stringify(product.additionalImages || product.additional_images || []),
+      product.rating,
+      product.inStock !== undefined ? product.inStock : true,
+      JSON.stringify(product.colors || []),
+      JSON.stringify(product.sizes || []),
+      product.countryOfOrigin || product.country_of_origin,
+      JSON.stringify(product.specifications || {}),
+      product.isNew || false,
+      product.isBestseller || false,
+      product.articleNumber || product.article_number,
+      product.barcode,
+      product.stockQuantity || product.stock_quantity || 0,
+      JSON.stringify(product.colorVariants || product.color_variants || []),
+      product.archived || false,
+      product.videoUrl || '',
+      product.videoType || '',
+      product.material || '',
+      product.modelName || ''
+    ];
+    const result = await pool.query(updateQuery, values);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json(parseProductRow(result.rows[0]));
+  } catch (error) {
+    console.error('❌ API: Error updating product:', error);
+    res.status(500).json({ error: 'Ошибка при обновлении товара' });
+  }
+});
+ 
+app.delete('/api/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Получаем товар, чтобы узнать имя файла изображения
+    const productResult = await pool.query(
+      'SELECT image_url FROM products WHERE id = $1', 
+      [id]
+    );
+    
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    const imageUrl = productResult.rows[0].image_url;
+    
+    // Удаляем запись из БД
+    await pool.query('DELETE FROM products WHERE id = $1', [id]);
+    
+    // Удаляем файл изображения, если он существует
+    if (imageUrl) {
+      const imagePath = path.join(imagesDir, imageUrl);
+      
+      try {
+        await fsp.unlink(imagePath);
+        console.log(`🗑️  Изображение удалено: ${imageUrl}`);
+      } catch (fileError) {
+        // Игнорируем ошибку "файл не найден"
+        if (fileError.code !== 'ENOENT') {
+          console.error(`⚠️ Ошибка удаления файла ${imageUrl}:`, fileError);
+        }
+      }
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ API: Error deleting product:', error);
+    res.status(500).json({ error: 'Ошибка при удалении товара' });
+  }
+});
+
+// Массовое удаление товаров с удалением изображений
+app.post('/api/products/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids required' });
+    }
+    
+    // Получаем все изображения для удаляемых товаров
+    const imagesResult = await pool.query(
+      'SELECT image_url FROM products WHERE id = ANY($1)',
+      [ids]
+    );
+    
+    // Удаляем записи из БД
+    await pool.query('DELETE FROM products WHERE id = ANY($1)', [ids]);
+    
+    // Удаляем файлы изображений
+    for (const row of imagesResult.rows) {
+      if (row.image_url) {
+        try {
+          const imagePath = path.join(imagesDir, row.image_url);
+          await fsp.unlink(imagePath);
+          console.log(`🗑️  Изображение удалено: ${row.image_url}`);
+        } catch (fileError) {
+          if (fileError.code !== 'ENOENT') {
+            console.error(`⚠️ Ошибка удаления файла ${row.image_url}:`, fileError);
+          }
+        }
+      }
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ API: Error bulk deleting products:', error);
+    res.status(500).json({ error: 'Ошибка при массовом удалении товаров' });
+  }
+});
+
+
+// Архивировать/восстановить товар
+app.patch('/api/products/:id/archive', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { archived } = req.body;
+    const result = await pool.query('UPDATE products SET archived = $1 WHERE id = $2 RETURNING *', [archived, id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json(parseProductRow(result.rows[0]));
+  } catch (error) {
+    console.error('❌ API: Error archiving/restoring product:', error);
+    res.status(500).json({ error: 'Ошибка при архивировании/восстановлении товара' });
+  }
+});
+
+ 
+
+// Массовая архивация/восстановление товаров
+app.post('/api/products/bulk-archive', async (req, res) => {
+  try {
+    const { ids, archive } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids required' });
+    await pool.query('UPDATE products SET archived = $1 WHERE id = ANY($2)', [archive, ids]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ API: Error bulk archiving/restoring products:', error);
+    res.status(500).json({ error: 'Ошибка при массовой архивации/восстановлении товаров' });
+  }
+});
+
+// Массовое объединение товаров по modelName
+app.post('/api/products/bulk-merge', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length < 2) return res.status(400).json({ error: 'Минимум два товара для объединения' });
+    const { v4: uuidv4 } = require('uuid');
+    const modelName = `model_${uuidv4()}`;
+    await pool.query('UPDATE products SET model_name = $1 WHERE id = ANY($2)', [modelName, ids]);
+    // Архивируем все кроме первого
+    const mainId = ids[0];
+    const archiveIds = ids.slice(1);
+    if (archiveIds.length > 0) {
+      await pool.query('UPDATE products SET archived = true WHERE id = ANY($1)', [archiveIds]);
+    }
+    res.json({ success: true, modelName });
+  } catch (error) {
+    console.error('❌ API: Error merging products:', error);
+    res.status(500).json({ error: 'Ошибка при объединении товаров' });
+  }
+});
+
+// Создать категорию
+app.post('/api/categories', async (req, res) => {
+  try {
+    const { name, imageUrl } = req.body;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    const { v4: uuidv4 } = require('uuid');
+    const id = uuidv4();
+    const result = await pool.query('INSERT INTO categories (id, name, image_url) VALUES ($1, $2, $3) RETURNING *', [id, name, imageUrl || '/placeholder.svg']);
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('❌ API: Error creating category:', error);
+    res.status(500).json({ error: 'Ошибка при создании категории' });
+  }
+});
+
+// Обновить изображение категории
+app.patch('/api/categories/:id/image', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imageUrl } = req.body;
+    if (!imageUrl) return res.status(400).json({ error: 'imageUrl required' });
+    const result = await pool.query('UPDATE categories SET image_url = $1 WHERE id = $2 RETURNING *', [imageUrl, id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Category not found' });
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('❌ API: Error updating category image:', error);
+    res.status(500).json({ error: 'Ошибка при обновлении изображения категории' });
+  }
+});
+
+// Удалить категорию
+app.delete('/api/categories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM categories WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Category not found' });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ API: Error deleting category:', error);
+    res.status(500).json({ error: 'Ошибка при удалении категории' });
+  }
+});
+ 
+
+
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, imagesDir); // Сохраняем прямо в images
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    
+    // 3. Генерация имени файла (уже хорошая реализация)
+    const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    cb(null, fileName);
+  }
+});
+
+// Фильтр для изображений (оставляем как есть)
+const imageFileFilter = (req, file, cb) => {
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/bmp',
+    'image/svg+xml'
+  ];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Недопустимый формат файла. Разрешены только изображения.'));
+  }
+};
+
+const upload = multer({ 
+  storage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: 20 * 1024 * 1024 } // 20 МБ
+});
+
+// Endpoint для загрузки изображений
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Файл не загружен' });
+  }
+  
+  // 4. Получаем ТОЛЬКО имя файла (без пути)
+  const fileName = req.file.filename; // например: "1623456789123-123456789.jpg"
+  
+  // 5. Здесь сохраняем fileName в БД
+  // Пример: await ImageModel.create({ filename: fileName });
+  
+  // 6. Возвращаем только имя файла (или относительный путь)
+  res.json({ url: `${fileName}` }); // или просто fileName, если путь известен на клиенте
+});
+
+app.get('/api/chat/:userId/history', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await pool.query(
+      `SELECT id, sender_id AS "senderId", text, created_at AS "createdAt", 
+       (sender_id = 'admin') AS "isAdmin"
+       FROM messages 
+       WHERE user_id = $1 
+       ORDER BY created_at ASC`,
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Отправка сообщения
+app.post('/api/chat/:userId/send', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { text, senderId } = req.body;
+
+    // Если senderId не передан — значит это пользователь, иначе админ
+    const actualSenderId = senderId || userId;
+
+    const result = await pool.query(
+      `INSERT INTO messages (user_id, sender_id, text) 
+       VALUES ($1, $2, $3) 
+       RETURNING id, sender_id AS "senderId", text, created_at AS "createdAt"`,
+      [userId, actualSenderId, text]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/chat/:userId/unread-count', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await pool.query(
+      `SELECT COUNT(*) 
+       FROM messages 
+       WHERE user_id = $1 
+         AND is_read = false 
+         AND sender_id = 'admin'`,
+      [userId]
+    );
+    res.json({ count: parseInt(result.rows[0].count) });
+  } catch (error) {
+    console.error('Error fetching unread count:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/chat/mark-read/:messageId', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    await pool.query(
+      `UPDATE messages SET is_read = true WHERE id = $1`,
+      [messageId]
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Error marking message as read:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Пометить все сообщения пользователя как прочитанные
+app.post('/api/chat/:userId/mark-all-read', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    await pool.query(
+      `UPDATE messages SET is_read = true 
+       WHERE user_id = $1 AND is_read = false`,
+      [userId]
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Error marking all messages as read:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+// Настройка WebSocket сервера
+const wss = new WebSocket.Server({ server });
+const connections = new Map();
+
+wss.on('connection', (ws, req) => {
+  // Парсим URL для получения типа соединения (user/admin) и userId
+  const urlParts = req.url?.split('/').filter(Boolean) || [];
+  if (urlParts.length < 3 || urlParts[0] !== 'chat' || !['user', 'admin'].includes(urlParts[1])) {
+    ws.close();
+    return;
+  }
+
+  const connType = urlParts[1]; // 'user' или 'admin'
+  const userId = urlParts[2];
+  const connKey = `${connType}-${userId}`;
+
+  // Сохраняем соединение
+  connections.set(connKey, ws);
+  console.log(`✅ WebSocket: Соединение установлено для ${connKey}`);
+
+  ws.on('message', async (message) => {
+    try {
+      const data = JSON.parse(message);
+      if (data.type === 'message') {
+        const senderId = data.senderId || (connType === 'admin' ? 'admin' : userId);
+        const isAdminMessage = senderId === 'admin';
+
+        // Определяем получателя
+        const recipientConnKey = isAdminMessage 
+          ? `user-${data.userId}` 
+          : `admin-${data.userId}`;
+
+        // Проверяем онлайн-статус получателя
+        const recipientWs = connections.get(recipientConnKey);
+        const isRead = !!recipientWs && recipientWs.readyState === WebSocket.OPEN;
+
+        // Сохраняем сообщение в БД
+        const result = await pool.query(
+          `INSERT INTO messages (user_id, sender_id, text, is_read) 
+           VALUES ($1, $2, $3, $4) 
+           RETURNING id, user_id, sender_id, text, created_at, is_read`,
+          [data.userId, senderId, data.text, isRead]
+        );
+
+        const messageData = {
+          id: result.rows[0].id,
+          user_id: data.userId,
+          sender_id: senderId,
+          text: data.text,
+          created_at: result.rows[0].created_at,
+          is_read: result.rows[0].is_read
+        };
+
+        // Отправляем сообщение получателю (если онлайн)
+        if (recipientWs && recipientWs.readyState === WebSocket.OPEN) {
+          recipientWs.send(JSON.stringify(messageData));
+        }
+
+        // Для двустороннего чата - отправляем копию отправителю
+        if (isAdminMessage) {
+          const senderWs = connections.get(`user-${data.userId}`);
+          if (senderWs && senderWs.readyState === WebSocket.OPEN) {
+            senderWs.send(JSON.stringify(messageData));
+          }
+        } else {
+          const adminWs = connections.get(`admin-${data.userId}`);
+          if (adminWs && adminWs.readyState === WebSocket.OPEN) {
+            adminWs.send(JSON.stringify(messageData));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ WebSocket: Ошибка обработки сообщения:', error);
+    }
+  });
+
+  ws.on('close', () => {
+    connections.delete(connKey);
+    console.log(`❌ WebSocket: Соединение закрыто для ${connKey}`);
+  });
+
+  ws.on('error', (error) => {
+    console.error(`❌ WebSocket: Ошибка соединения для ${connKey}:`, error);
+  });
+});
+
+
+server.listen(port, () => {
+  console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
+  console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
+  console.log(`🚀 HTTP сервер работает на http://localhost:${port}`);
+  console.log(`🚀 WebSocket сервер работает на ws://localhost:${port}`);
+});

@@ -5,12 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare } from 'lucide-react';
 import ChatWindow from './ChatWindow';
 import { useChatMessages } from '@/hooks/useChatMessages';
-import { useChatSender } from '@/hooks/useChatSender';
 
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, unreadCount, messagesEndRef, fetchMessages } = useChatMessages(isOpen);
-  const { isSending, handleSendMessage } = useChatSender(fetchMessages);
+  const { messages, unreadCount, messagesEndRef, sendMessage } = useChatMessages(isOpen);
+  const isSending = false; // WebSocket is instant, can be improved with local state if needed
 
   const handleToggleChat = () => {
     setIsOpen(!isOpen);
@@ -40,7 +39,7 @@ const ChatWidget: React.FC = () => {
         <ChatWindow
           messages={messages}
           onClose={handleToggleChat}
-          onSendMessage={handleSendMessage}
+          onSendMessage={sendMessage}
           isSending={isSending}
           messagesEndRef={messagesEndRef}
         />

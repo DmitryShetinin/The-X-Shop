@@ -1,11 +1,14 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeneralInfoTab from "./product-form/GeneralInfoTab";
 import AdditionalInfoTab from "./product-form/AdditionalInfoTab";
 import { useProductForm } from "@/hooks/useProductForm";
+import { toast } from "sonner";
+import { API_BASE_URL } from "@/types/variables";
+ 
 
 interface ProductFormProps {
   product: Partial<Product>;
@@ -15,6 +18,7 @@ interface ProductFormProps {
 }
 
 const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps) => {
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const {
     formData,
     newCategory,
@@ -27,10 +31,38 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
     handleSelectChange,
     handleMainImageUploaded,
     handleAdditionalImagesChange,
-    validateAndSubmitForm,
+    validateAndSubmitForm: baseValidateAndSubmitForm,
     setNewCategory,
     setShowNewCategoryInput
-  } = useProductForm({ product, onSave });
+  } = useProductForm({ product, onSave: handleSave });
+
+  async function handleSave(finalProduct: Partial<Product>) {
+    // If a file is selected, upload it first
+    if (mainImageFile) {
+      try {
+        const formData = new FormData();
+        formData.append('file', mainImageFile);
+        const response = await fetch(`${API_BASE_URL}/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) throw new Error('Ошибка загрузки файла');
+        const { url } = await response.json();
+        finalProduct.imageUrl = url;
+      } catch (error: any) {
+        toast.error('Ошибка загрузки изображения', {
+          description: error.message || 'Произошла ошибка при загрузке файла',
+        });
+        return;
+      }
+    }
+    await onSave(finalProduct);
+  }
+
+  // Adapter for file selection
+  const handleMainImageFileSelected = (file: File | null) => {
+    setMainImageFile(file);
+  };
 
   // Create an adapter function to fix the parameter order for checkbox
   const handleCheckboxChangeAdapter = (checked: boolean, name: string) => {
@@ -63,6 +95,7 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
             handleCheckboxChange={handleCheckboxChangeAdapter} // Use the adapter function here
             handleMainImageUploaded={handleMainImageUploaded}
             handleAdditionalImagesChange={handleAdditionalImagesChange}
+            onMainImageFileSelected={handleMainImageFileSelected}
           />
         </TabsContent>
 
@@ -79,7 +112,7 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
         <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Отмена
         </Button>
-        <Button onClick={validateAndSubmitForm} disabled={isSubmitting}>
+        <Button onClick={baseValidateAndSubmitForm} disabled={isSubmitting}>
           {isSubmitting ? "Сохранение..." : (product.id ? "Сохранить изменения" : "Добавить товар")}
         </Button>
       </div>

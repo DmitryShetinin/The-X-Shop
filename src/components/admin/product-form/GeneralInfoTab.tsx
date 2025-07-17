@@ -18,6 +18,7 @@ interface GeneralInfoTabProps {
   handleCheckboxChange: (checked: boolean, name: string) => void;
   handleMainImageUploaded: (url: string) => void;
   handleAdditionalImagesChange: (urls: string[]) => void;
+  onMainImageFileSelected?: (file: File | null) => void;
 }
 
 const GeneralInfoTab = ({
@@ -32,6 +33,7 @@ const GeneralInfoTab = ({
   handleCheckboxChange,
   handleMainImageUploaded,
   handleAdditionalImagesChange,
+  onMainImageFileSelected
 }: GeneralInfoTabProps) => {
   
   return (
@@ -67,6 +69,7 @@ const GeneralInfoTab = ({
         additionalImages={formData.additionalImages || []}
         handleMainImageUploaded={handleMainImageUploaded}
         handleAdditionalImagesChange={handleAdditionalImagesChange}
+        onMainImageFileSelected={onMainImageFileSelected}
       />
     </div>
   );
