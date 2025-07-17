@@ -142,7 +142,12 @@ async function loadCatalogProducts(category = null) {
       const productCard = createProductCard(product);
       productsContainer.appendChild(productCard);
     });
-    
+
+    // После рендера товаров обновляем максимальную цену фильтра с задержкой
+    if (typeof updatePriceFilterMax === 'function') {
+      setTimeout(updatePriceFilterMax, 200);
+    }
+
     // Инициализируем кнопки после добавления карточек
     if (typeof initAddToCartButtons === 'function') {
       initAddToCartButtons();

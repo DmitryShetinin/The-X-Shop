@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 export const useChatSender = (fetchMessages: () => Promise<void>) => {
   const [isSending, setIsSending] = useState(false);
-  const { profile } = useAuth();
+  const { user } = useAuth();
 
   const handleSendMessage = async (messageText: string): Promise<void> => {
     if (!messageText.trim() || isSending) {
@@ -18,8 +18,8 @@ export const useChatSender = (fetchMessages: () => Promise<void>) => {
     
     try {
       const userInfo = {
-        name: profile?.name || '',
-        email: profile?.email || ''
+        name: user?.name || '',
+        email: user?.email || ''
       };
       
       console.log("Sending message to server...");

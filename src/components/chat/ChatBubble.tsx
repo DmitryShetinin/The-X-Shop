@@ -2,7 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "@/types/chat";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 
 interface ChatBubbleProps {
@@ -14,8 +14,13 @@ interface ChatBubbleProps {
 const ChatBubble = ({ message, isFromAdmin, timestamp }: ChatBubbleProps) => {
   const messageText = message.message;
   
-  const formattedTime = formatDistanceToNow(timestamp, { 
-    addSuffix: true,
+  // Форматируем время в московском часовом поясе
+  // Форматируем время в московском часовом поясе
+  // date-fns не поддерживает timeZone напрямую, поэтому преобразуем вручную
+  const moscowTimestamp = new Date(
+    timestamp.toLocaleString("en-US", { timeZone: "Europe/Moscow" })
+  );
+  const formattedTime = format(moscowTimestamp, "HH:mm", { 
     locale: ru
   });
 

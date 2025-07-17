@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { ChatMessage } from "@/types/chat";
-import { TELEGRAM_TOKEN } from "@/types/variables";
+import { API_BASE_URL } from "@/types/variables";
 
 // Получение или создание ID чата с улучшенной идентификацией
 let cachedChatId: string | null = null;
@@ -196,17 +196,25 @@ export const sendMessage = async (
 };
 
 // Получение истории сообщений
-export const getMessages = async (): Promise<ChatMessage[]> => {
+export const getMessages = async (userId : string): Promise<ChatMessage[]> => {
   try {
     const chatId = getChatId();
-    console.log("Получение сообщений для chat ID:", chatId);
-      
-    console.log("=============================================")
-    console.log('GOOGLE_CLIENT_ID:', process.env)
-    // Все импорты supabase и вызовы supabase.functions.invoke удалены
-    // Временные заглушки:
-    console.log("Получение сообщений (заглушка) для chat ID:", chatId);
-    return []; // Заглушка
+    // Запрос к backend API для получения истории сообщений
+    const response = await fetch(`${API_BASE_URL}/chat/${userId}/history`);
+    if (!response.ok) {
+      console.error('Ошибка при получении сообщений:', response.status, await response.text());
+      return [];
+    }
+    const data = await response.json();
+    // Маппинг структуры ответа к ChatMessage
+    return data.map((msg: any) => ({
+      id: msg.id,
+      chat_id: chatId,
+      message: msg.text, // или msg.message если поле так называется
+      is_from_admin: msg.isAdmin || msg.is_from_admin || msg.senderId === 'admin',
+      is_read: msg.is_read ?? true, // если нет поля, считаем true
+      created_at: msg.createdAt || msg.created_at
+    }));
   } catch (error) {
     console.error("Ошибка в getMessages:", error);
     return [];

@@ -7,14 +7,12 @@ interface PriceRangeSliderProps {
   priceRange: { min: number; max: number };
   handlePriceChange: (type: "min" | "max", value: string) => void;
   loading: boolean;
-  maxAllowedPrice?: number;
 }
 
 const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   priceRange,
   handlePriceChange,
-  loading,
-  maxAllowedPrice = 15000
+  loading
 }) => {
     const [localMin, setLocalMin] = useState(priceRange.min);
   const [localMax, setLocalMax] = useState(priceRange.max);
@@ -38,8 +36,8 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
           disabled={loading}
           defaultValue={[priceRange.min, priceRange.max]}
           value={[priceRange.min, priceRange.max]}
-          max={maxAllowedPrice}
-          step={1000}
+          max={priceRange.max}
+          step={500}
           onValueChange={handleSliderChange}
           className="my-6"
         />
@@ -69,7 +67,7 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             onChange={(e) => setLocalMax(parseInt(e.target.value || "0", 10))}
             onBlur={() => handlePriceChange("max", localMax.toString())}
             min={priceRange.min}
-            max={maxAllowedPrice}
+            max={priceRange.max}
             disabled={loading}
             className="mt-1"
           />

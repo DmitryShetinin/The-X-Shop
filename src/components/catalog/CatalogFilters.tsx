@@ -37,6 +37,9 @@ const CatalogFilters: React.FC<CatalogFiltersProps> = ({
   handleClearAllFilters,
   findCategoryByName,
 }) => {
+ 
+
+
   return (
     <div className={`space-y-6 ${showMobileFilters ? 'block' : 'hidden'} md:block`}>
       <div className="flex items-center justify-between mb-4">

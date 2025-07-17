@@ -151,7 +151,7 @@ const ProductTabContent = ({
       description
     });
   };
-
+ 
   // Handle bulk action confirmation
   const handleBulkActionConfirm = () => {
     const action = confirmBulkAction.action;

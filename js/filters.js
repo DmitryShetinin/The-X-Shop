@@ -16,10 +16,32 @@ function initFilters() {
   }
   
   // Фильтр по цене
-  const priceMinInput = document.getElementById('price-min');
-  const priceMaxInput = document.getElementById('price-max');
+  const priceMinInput = document.getElementById('min-price');
+  const priceMaxInput = document.getElementById('max-price');
   const applyPriceBtn = document.getElementById('apply-price-filter');
-  
+
+  // Динамически определяем максимальную цену среди всех товаров
+  if (priceMinInput && priceMaxInput) {
+    // Получаем все карточки товаров на странице
+    const productCards = document.querySelectorAll('.product-card');
+    let maxPrice = 0;
+    productCards.forEach(card => {
+      // Ищем цену (сначала скидочную, если есть, иначе обычную)
+      let priceEl = card.querySelector('.current-price');
+      if (priceEl) {
+        let price = parseInt(priceEl.textContent.replace(/[^0-9]/g, ''), 10);
+        if (!isNaN(price) && price > maxPrice) {
+          maxPrice = price;
+        }
+      }
+    });
+    // Если карточек нет, fallback на 100000
+    if (maxPrice === 0) maxPrice = 100000;
+    priceMinInput.max = maxPrice;
+    priceMaxInput.max = maxPrice;
+    priceMaxInput.setAttribute('data-max-price', maxPrice);
+  }
+
   if (priceMinInput && priceMaxInput && applyPriceBtn) {
     // Восстанавливаем фильтры из URL
     const minPrice = urlParams.get('min_price');
@@ -95,8 +117,8 @@ function applyFilters() {
   }
   
   // Добавляем фильтр по цене
-  const priceMinInput = document.getElementById('price-min');
-  const priceMaxInput = document.getElementById('price-max');
+  const priceMinInput = document.getElementById('min-price');
+  const priceMaxInput = document.getElementById('max-price');
   
   if (priceMinInput.value) {
     newParams.set('min_price', priceMinInput.value);
@@ -220,7 +242,7 @@ function clearAllFilters() {
     window.location.href = window.location.pathname;
   }
 }
-
+ 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
   // Проверяем, находимся ли мы на странице каталога

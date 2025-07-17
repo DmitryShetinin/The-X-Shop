@@ -38,7 +38,7 @@ const UserOrders = () => {
       }
 
       try {
-        const result = await getUserOrders(user.id);
+        const result = await getUserOrders(user.id.toString());
         
         if (!result.success || !result.orders) {
           throw new Error(result.error?.message || "Failed to fetch orders");

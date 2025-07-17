@@ -151,7 +151,7 @@ const Cart = () => {
     // Clear the cart after successful order
     clearCart();
    
-    // sendToTelegram(result)
+    sendToTelegram(result)
     navigate("/thankYou");
     // Если пользователь авторизован, перенаправляем в личный кабинет на страницу заказов
     if (user) {
@@ -160,8 +160,8 @@ const Cart = () => {
         description: "Вы можете отслеживать статус заказа в личном кабинете",
       });
       // Перенаправляем после небольшой задержки для чтения сообщения
-      console.log("Hello from handleSuccessfulOrder  ");
-      sendOrderNotification(result)
+ 
+     // sendOrderNotification(result)
       navigate("/thankYou");
   
  

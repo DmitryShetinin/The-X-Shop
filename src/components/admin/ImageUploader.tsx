@@ -7,101 +7,46 @@ import { Upload, X, Image, UploadCloud } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { API_BASE_URL } from "@/types/variables";
 
 interface ImageUploaderProps {
   initialImageUrl?: string;
   onImageUploaded: (url: string) => void;
+  onFileSelected?: (file: File | null) => void;
   onRemoveImage?: () => void;
 }
 
 export default function ImageUploader({ 
   initialImageUrl, 
   onImageUploaded, 
+  onFileSelected, 
   onRemoveImage 
 }: ImageUploaderProps) {
-  const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>(initialImageUrl || "");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [mode, setMode] = useState<"upload" | "url">(initialImageUrl ? "url" : "upload");
   const [externalUrl, setExternalUrl] = useState<string>(initialImageUrl || "");
   const [previewError, setPreviewError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
+      setSelectedFile(null);
+      if (onFileSelected) onFileSelected(null);
       return;
     }
-    
     const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    try {
-      setUploading(true);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error("Пожалуйста, войдите в систему для загрузки изображений");
-      }
-
-      console.log("Загрузка файла...", {
-        fileName,
-        bucket: 'product-images',
-        userId: session.user.id
-      });
-
-      // Определяем роли пользователя для логирования
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role, is_super_admin')
-        .eq('user_id', session.user.id);
-      
-      console.log("Роли пользователя:", roles);
-
-      // Make sure we're uploading to the correct bucket
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (error) {
-        console.error("Детали ошибки загрузки:", error);
-        throw error;
-      }
-
-      if (data) {
-        const { data: publicUrlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-        
-        const uploadedUrl = publicUrlData.publicUrl;
-        setImageUrl(uploadedUrl);
-        onImageUploaded(uploadedUrl);
-        setPreviewError(false);
-        
-        toast.success("Изображение загружено", {
-          description: "Изображение успешно загружено и сохранено"
-        });
-      }
-    } catch (error: any) {
-      console.error("Ошибка при загрузке изображения:", error);
-      toast.error("Ошибка загрузки изображения", {
-        description: error.message || "Произошла ошибка при загрузке файла",
-      });
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
+    setSelectedFile(file);
+    setImageUrl(""); // Clear any previous URL
+    setPreviewError(false);
+    if (onFileSelected) onFileSelected(file);
   };
 
   const handleUrlSubmit = () => {
     if (externalUrl.trim()) {
       setImageUrl(externalUrl);
+      setSelectedFile(null);
+      if (onFileSelected) onFileSelected(null);
       onImageUploaded(externalUrl);
       toast.success("URL изображения добавлен");
     }
@@ -110,7 +55,9 @@ export default function ImageUploader({
   const handleRemoveImage = () => {
     setImageUrl("");
     setExternalUrl("");
+    setSelectedFile(null);
     setPreviewError(false);
+    if (onFileSelected) onFileSelected(null);
     if (onRemoveImage) {
       onRemoveImage();
     }
@@ -122,7 +69,7 @@ export default function ImageUploader({
 
   return (
     <div className="space-y-4">
-      <Tabs value={mode} onValueChange={(value) => setMode(value as "upload" | "url")}>
+      <Tabs value={mode} onValueChange={(value) => setMode(value as "upload" | "url")}> 
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="upload">Загрузить файл</TabsTrigger>
           <TabsTrigger value="url">URL изображения</TabsTrigger>
@@ -136,27 +83,16 @@ export default function ImageUploader({
               accept="image/*"
               className="hidden"
               onChange={handleFileChange}
-              disabled={uploading}
             />
             <Button 
               onClick={triggerFileInput} 
-              disabled={uploading} 
               className="flex-shrink-0"
               variant="outline"
             >
-              {uploading ? (
-                <span className="flex items-center">
-                  <span className="animate-spin mr-2">
-                    <UploadCloud className="h-4 w-4" />
-                  </span>
-                  Загрузка...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Выбрать файл
-                </span>
-              )}
+              <span className="flex items-center">
+                <Upload className="mr-2 h-4 w-4" />
+                Выбрать файл
+              </span>
             </Button>
           </div>
         </TabsContent>
@@ -178,15 +114,25 @@ export default function ImageUploader({
         </TabsContent>
       </Tabs>
 
-      {imageUrl && (
+      {(selectedFile || imageUrl) && (
         <div className="relative mt-4 border rounded-md overflow-hidden">
-          <img
-            src={imageUrl}
-            alt="Предпросмотр"
-            className="max-h-[200px] object-contain mx-auto"
-            onError={() => setPreviewError(true)}
-            style={{ display: previewError ? 'none' : 'block' }}
-          />
+          {selectedFile ? (
+            <img
+              src={URL.createObjectURL(selectedFile)}
+              alt="Предпросмотр"
+              className="max-h-[200px] object-contain mx-auto"
+              onError={() => setPreviewError(true)}
+              style={{ display: previewError ? 'none' : 'block' }}
+            />
+          ) : (
+            <img
+              src={imageUrl}
+              alt="Предпросмотр"
+              className="max-h-[200px] object-contain mx-auto"
+              onError={() => setPreviewError(true)}
+              style={{ display: previewError ? 'none' : 'block' }}
+            />
+          )}
           {previewError && (
             <div className="h-[200px] flex items-center justify-center bg-muted">
               <p className="text-muted-foreground">Ошибка загрузки изображения</p>

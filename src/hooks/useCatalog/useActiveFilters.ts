@@ -26,7 +26,7 @@ export const useActiveFilters = ({
     
     if (categoryParam) count++;
     if (colorParam) count++;
-    if (priceRange.min > 0 || priceRange.max < 500000000) count++;
+    if (priceRange.min > 0 || priceRange.max < 123) count++;
     if (searchTerm) count++;
     
     setActiveFiltersCount(count);

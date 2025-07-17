@@ -2,7 +2,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import * as authService from '@/services/authService';
  
-import { hasRole as hasRoleApi } from '@/utils/roleUtils';
 import { API_BASE_URL } from '@/types/variables';
 
 // Тип пользователя (можно расширить по необходимости)
@@ -99,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const hasRole = async (role: 'admin' | 'user' | 'editor') => {
-    console.log("Hello from hasRole  1")
+ 
     if (!user?.id) return false;
     const token = localStorage.getItem('auth_token');
     if (!token) return false;

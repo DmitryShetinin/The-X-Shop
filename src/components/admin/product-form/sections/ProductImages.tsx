@@ -10,13 +10,15 @@ interface ProductImagesProps {
   additionalImages: string[];
   handleMainImageUploaded: (url: string) => void;
   handleAdditionalImagesChange: (urls: string[]) => void;
+  onMainImageFileSelected?: (file: File | null) => void;
 }
 
 export const ProductImages: React.FC<ProductImagesProps> = ({
   imageUrl,
   additionalImages,
   handleMainImageUploaded,
-  handleAdditionalImagesChange
+  handleAdditionalImagesChange,
+  onMainImageFileSelected
 }) => {
   return (
     <FormSection>
@@ -27,6 +29,7 @@ export const ProductImages: React.FC<ProductImagesProps> = ({
             <ImageUploader
               initialImageUrl={imageUrl || "/placeholder.svg"}
               onImageUploaded={handleMainImageUploaded}
+              onFileSelected={onMainImageFileSelected}
             />
           </div>
         </div>

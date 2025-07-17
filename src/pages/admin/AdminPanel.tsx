@@ -9,6 +9,7 @@ import AdminCustomers from "./AdminCustomers";
 import AdminCategories from "./AdminCategories";
 import AdminSettings from "./AdminSettings";
 import AdminReports from "./AdminReports";
+import AdminCustomerChat from "./AdminCustomerChat";
 import { NewsletterManager } from "@/components/admin/marketing/NewsletterManager";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -132,6 +133,7 @@ const AdminPanel = () => {
                   <Route path="newsletter" element={<NewsletterManager />} />
                   <Route path="reports" element={<AdminReports />} />
                   <Route path="settings" element={<AdminSettings />} />
+                  <Route path="customer/chat/:id" element={<AdminCustomerChat />} />
                 </Routes>
               </div>
             </main>

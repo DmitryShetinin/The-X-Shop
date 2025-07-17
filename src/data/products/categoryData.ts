@@ -1,5 +1,12 @@
-// Импортируем тип Category из index.ts
-import { Category } from './index';
+// Определяю интерфейс Category локально, чтобы избежать циклической зависимости
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  productCount?: number;
+}
+
 import { fetchCategoriesFromPostgres } from "./postgres/categoryApi";
 import { getProductsByCategoryFromPostgres } from "./postgres/productApi";
 

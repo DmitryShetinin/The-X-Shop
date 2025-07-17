@@ -13,6 +13,7 @@ const PriceFilter: React.FC<PriceFilterProps> = ({
   handlePriceChange,
   loading
 }) => {
+ 
   return (
     <div className="border-t pt-6">
       <h3 className="font-semibold mb-4">Цена, ₽</h3>
@@ -20,7 +21,6 @@ const PriceFilter: React.FC<PriceFilterProps> = ({
         priceRange={priceRange}
         handlePriceChange={handlePriceChange}
         loading={loading}
-        maxAllowedPrice={500000000}
       />
     </div>
   );

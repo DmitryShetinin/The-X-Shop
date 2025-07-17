@@ -4,13 +4,46 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+ 
+
+
 import { Product } from "@/types/product";
 import ProductForm from "@/components/admin/ProductForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductTabContent from "@/components/admin/products/ProductTabContent";
 import { useProductManagement } from "@/hooks/useProductManagement";
+import { API_BASE_URL } from "@/types/variables";
+import {
+  fetchProductsFromPostgres,
+  addOrUpdateProduct,
+  deleteProduct,
+  archiveProduct,
+  bulkDeleteProducts,
+  bulkArchiveProducts,
+  mergeProductsByModelName
+} from '@/data/products/postgres/productApi';
+import {
+  fetchCategoriesFromPostgres
+} from '@/data/products/postgres/categoryApi';
+
+interface Order {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  total: number;
+  status: string;
+  created_at: string;
+}
+
+
 
 const AdminProducts = () => {
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+
+
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [activeTab, setActiveTab] = useState<string>("active");
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,17 +53,7 @@ const AdminProducts = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Use our custom hook for product management
-  const { 
-    handleSaveProduct,
-    handleArchiveProduct,
-    handleRestoreProduct,
-    handleDeleteProduct
-  } = useProductManagement({
-    refreshProductsList,
-    setShowForm,
-    setEditingProduct
-  });
+ 
 
   // Default product state for new products
   const defaultProduct: Partial<Product> = {
@@ -52,53 +75,104 @@ const AdminProducts = () => {
     modelName: "", // Add modelName field to default product
   };
 
-  // Load categories and products on mount
+  // Загрузка товаров и категорий при монтировании
   useEffect(() => {
-    const loadData = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Загружаем категории
-        const categoriesData = await fetchCategoriesFromSupabase();
+        const products = await fetchProductsFromPostgres();
+ 
+        setProductsList(products);
+        const categoriesData = await fetchCategoriesFromPostgres();
         setCategories(categoriesData.map(cat => cat.name));
-        
-        // Загружаем товары в зависимости от активной вкладки
-        await refreshProductsList();
       } catch (error) {
-        console.error("Ошибка загрузки данных:", error);
-        toast.error("Не удалось загрузить данные", {
-          description: "Пожалуйста, попробуйте обновить страницу."
-        });
+        toast.error('Ошибка загрузки данных');
       } finally {
         setIsLoading(false);
       }
     };
-    
-    loadData();
-  }, [activeTab]);
+    fetchData();
+  }, []);
 
-  // Function to refresh products list
+  // Функция для обновления списка товаров и категорий
   async function refreshProductsList() {
     try {
-      const allProducts = await fetchProductsFromSupabase(true);
-      
-      if (activeTab === "active") {
-        const activeProducts = allProducts.filter(product => !product.archived);
-        setProductsList(activeProducts);
+      const allProducts = await fetchProductsFromPostgres();
+  
+      if (activeTab === 'active') {
+        setProductsList(allProducts.filter(product => !product.archived));
       } else {
-        const archivedProducts = allProducts.filter(product => product.archived);
-        setProductsList(archivedProducts);
+        setProductsList(allProducts.filter(product => product.archived));
       }
-      
-      // Refresh categories too
-      const categoriesData = await fetchCategoriesFromSupabase();
+      const categoriesData = await fetchCategoriesFromPostgres();
       setCategories(categoriesData.map(cat => cat.name));
     } catch (error) {
-      console.error("Ошибка обновления списка товаров:", error);
-      toast.error("Ошибка загрузки данных", {
-        description: error instanceof Error ? error.message : "Неизвестная ошибка"
+      console.error('Ошибка обновления списка товаров:', error);
+      toast.error('Ошибка загрузки данных', {
+        description: error instanceof Error ? error.message : 'Неизвестная ошибка',
       });
     }
   }
+
+  // Сохранение товара (добавление/редактирование)
+  const handleSaveProduct = async (formData: Partial<Product>) => {
+    setIsLoading(true);
+    try {
+      await addOrUpdateProduct(formData as Product);
+      toast.success(formData.id ? 'Товар обновлен' : 'Товар добавлен');
+      setShowForm(false);
+      setEditingProduct(null);
+      await refreshProductsList();
+    } catch (error) {
+      toast.error('Ошибка при сохранении товара', {
+        description: error instanceof Error ? error.message : 'Неизвестная ошибка',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Архивировать товар
+  const handleArchiveProduct = async (productId: string) => {
+    setIsLoading(true);
+    try {
+      await archiveProduct(productId, true);
+      toast.info('Товар архивирован');
+      await refreshProductsList();
+    } catch (error) {
+      toast.error('Ошибка при архивировании товара');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Восстановить товар из архива
+  const handleRestoreProduct = async (productId: string) => {
+    setIsLoading(true);
+    try {
+      await archiveProduct(productId, false);
+      toast.success('Товар восстановлен');
+      await refreshProductsList();
+    } catch (error) {
+      toast.error('Ошибка при восстановлении товара');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Удалить товар навсегда
+  const handleDeleteProduct = async (productId: string) => {
+    setIsLoading(true);
+    try {
+      await deleteProduct(productId);
+      toast('Товар удален', { description: 'Товар был удален навсегда' });
+      await refreshProductsList();
+    } catch (error) {
+      toast.error('Ошибка при удалении товара');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
@@ -116,73 +190,71 @@ const AdminProducts = () => {
     setCategoryFilter("all");
   };
 
-  // Bulk action handlers
+  // Массовое удаление
   const handleBulkDelete = async (productIds: string[]) => {
     setIsLoading(true);
     try {
       const success = await bulkDeleteProducts(productIds);
       if (success) {
-        toast.success("Товары удалены", {
-          description: `${productIds.length} товаров было успешно удалено`
+        toast.success('Товары удалены', {
+          description: `${productIds.length} товаров было успешно удалено`,
         });
         await refreshProductsList();
       } else {
-        toast.error("Ошибка при удалении товаров");
+        toast.error('Ошибка при удалении товаров');
       }
     } catch (error) {
-      console.error("Ошибка при массовом удалении:", error);
-      toast.error("Ошибка при удалении товаров", {
-        description: error instanceof Error ? error.message : "Неизвестная ошибка"
+      toast.error('Ошибка при массовом удалении', {
+        description: error instanceof Error ? error.message : 'Неизвестная ошибка',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Массовая архивация/восстановление
   const handleBulkArchive = async (productIds: string[]) => {
     setIsLoading(true);
     try {
-      const archive = activeTab === "active"; // Archive if on active tab, restore if on archive tab
+      const archive = activeTab === 'active';
       const success = await bulkArchiveProducts(productIds, archive);
       if (success) {
-        toast.success(archive ? "Товары архивированы" : "Товары восстановлены", {
-          description: `${productIds.length} товаров было успешно ${archive ? "архивировано" : "восстановлено"}`
+        toast.success(archive ? 'Товары архивированы' : 'Товары восстановлены', {
+          description: `${productIds.length} товаров было успешно ${archive ? 'архивировано' : 'восстановлено'}`,
         });
         await refreshProductsList();
       } else {
-        toast.error(`Ошибка при ${archive ? "архивации" : "восстановлении"} товаров`);
+        toast.error(`Ошибка при ${archive ? 'архивации' : 'восстановлении'} товаров`);
       }
     } catch (error) {
-      console.error(`Ошибка при массовом ${activeTab === "active" ? "архивировании" : "восстановлении"}:`, error);
-      toast.error(`Ошибка при ${activeTab === "active" ? "архивировании" : "восстановлении"} товаров`, {
-        description: error instanceof Error ? error.message : "Неизвестная ошибка"
+      toast.error(`Ошибка при массовом ${activeTab === 'active' ? 'архивировании' : 'восстановлении'}`, {
+        description: error instanceof Error ? error.message : 'Неизвестная ошибка',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Массовое объединение по modelName
   const handleBulkMerge = async (productIds: string[]) => {
     if (productIds.length < 2) {
-      toast.error("Для объединения нужно выбрать минимум два товара");
+      toast.error('Для объединения нужно выбрать минимум два товара');
       return;
     }
-
     setIsLoading(true);
     try {
       const success = await mergeProductsByModelName(productIds);
       if (success) {
-        toast.success("Товары объединены", {
-          description: `${productIds.length} товаров было успешно объединено в одну модель`
+        toast.success('Товары объединены', {
+          description: `${productIds.length} товаров было успешно объединено в одну модель`,
         });
         await refreshProductsList();
       } else {
-        toast.error("Ошибка при объединении товаров");
+        toast.error('Ошибка при объединении товаров');
       }
     } catch (error) {
-      console.error("Ошибка при объединении товаров:", error);
-      toast.error("Ошибка при объединении товаров", {
-        description: error instanceof Error ? error.message : "Неизвестная ошибка"
+      toast.error('Ошибка при объединении товаров', {
+        description: error instanceof Error ? error.message : 'Неизвестная ошибка',
       });
     } finally {
       setIsLoading(false);
