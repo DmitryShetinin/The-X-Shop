@@ -101,12 +101,7 @@ const ProductInfo = ({ product, selectedColorVariant: propSelectedColorVariant =
         )}
       </div>
     
-      {/* Stock status - replaced with StockStatus component */}
-      <StockStatus 
-        product={product} 
-        selectedColor={selectedColor} 
-        hasStock={isProductAvailable} 
-      />
+  
     
       {/* Product actions */}
       <div className="mt-6 space-y-4">
@@ -120,6 +115,7 @@ const ProductInfo = ({ product, selectedColorVariant: propSelectedColorVariant =
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="px-3 py-2 border-r"
                   aria-label="Уменьшить количество"
+                  style={{ cursor: 'pointer' }}
                 >
                   −
                 </button>
@@ -128,6 +124,7 @@ const ProductInfo = ({ product, selectedColorVariant: propSelectedColorVariant =
                   onClick={() => setQuantity(quantity + 1)}
                   className="px-3 py-2 border-l"
                   aria-label="Увеличить количество"
+                  style={{ cursor: 'pointer' }}
                 >
                   +
                 </button>

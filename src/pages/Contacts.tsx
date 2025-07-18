@@ -11,9 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 
 const Contacts = () => {
-  const { profile } = useAuth();
-  const [name, setName] = useState(profile?.name || "");
-  const [email, setEmail] = useState(profile?.email || "");
+  const { user } = useAuth();
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,9 +32,10 @@ const Contacts = () => {
         name: name,
         email: email
       };
-      
-      const success = await sendMessage(message, userInfo);
-      
+
+      // Fix: sendMessage expects (message: string, userInfo: string)
+      const success = await sendMessage(message, JSON.stringify(userInfo));
+
       if (success) {
         toast.success("Сообщение отправлено", { 
           description: "Мы свяжемся с вами в ближайшее время" 

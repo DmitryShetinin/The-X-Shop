@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,14 +9,16 @@ interface ProductPricingProps {
   formData: Partial<Product>;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleCheckboxChange: (checked: boolean, name: string) => void;
+  handleStockQuantityChange: (e: React.ChangeEvent<HTMLInputElement>) => void; // Измененный тип
 }
 
 export const ProductPricing: React.FC<ProductPricingProps> = ({
   formData,
   handleInputChange,
-  handleCheckboxChange
+  handleCheckboxChange,
+  handleStockQuantityChange
 }) => {
-  // Автоматически определяем, есть ли товар в наличии, на основе количества
+  // Automatically determine if product is in stock based on quantity
   const stockQuantity = formData.stockQuantity !== undefined ? formData.stockQuantity : 0;
   const isInStock = stockQuantity > 0;
   
@@ -57,17 +58,14 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({
       </FormRow>
 
       <FormRow label="Количество на складе" htmlFor="stockQuantity">
+       
+          
         <Input
           id="stockQuantity"
           name="stockQuantity"
           type="number"
-          value={formData.stockQuantity !== undefined ? formData.stockQuantity : ""}
-          onChange={(e) => {
-            handleInputChange(e);
-            // Автоматически устанавливаем статус наличия при изменении количества
-            const newQuantity = parseInt(e.target.value, 10) || 0;
-            handleCheckboxChange(newQuantity > 0, "inStock");
-          }}
+          value={formData.stockQuantity ?? ""}
+          onChange={handleStockQuantityChange}
           placeholder="0"
           min="0"
           className="w-full"
@@ -103,7 +101,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({
               id="inStock"
               checked={formData.inStock ?? isInStock}
               onCheckedChange={(checked) => handleCheckboxChange(!!checked, "inStock")}
-              disabled={true} /* Отключаем редактирование галочки - она теперь автоматически устанавливается */
+              disabled={true}
             />
             <label
               htmlFor="inStock"

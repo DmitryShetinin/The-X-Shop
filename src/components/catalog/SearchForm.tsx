@@ -111,161 +111,44 @@ export const SearchForm: React.FC<SearchFormProps> = ({
       <div className="space-y-4">
         {/* Основная форма поиска */}
         <form onSubmit={handleSearchSubmit} className="flex gap-2 w-full">
-          <div className="relative flex-1">
-            <Input
-              ref={searchInputRef}
-              type="search"
-              placeholder="Поиск товаров по названию, описанию, категории..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="pr-20 border-primary/20 focus-visible:border-primary focus-visible:ring-primary/20 bg-background placeholder:text-muted-foreground/70 h-11"
-              disabled={loading}
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
-              <Search className="h-5 w-5" />
-            </div>
-            {/* Индикаторы поиска */}
-            <div className="absolute right-10 top-1/2 transform -translate-y-1/2 flex gap-1">
-              {hasSearchFilters && (
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Badge variant="outline" className="h-5 px-1 text-xs">
-                      Поиск
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Активный поиск</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-              {caseSensitive && (
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Badge variant="outline" className="h-5 px-1 text-xs">
-                      Aa
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Учитывается регистр</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          </div>
-          
-          <Button 
-            type="submit" 
-            disabled={loading}
-            size="lg"
-            className="h-11 px-6"
-          >
-            Найти
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="h-11 px-4"
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Фильтры
-            {hasActiveFilters && (
-              <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 text-xs">
-                !
-              </Badge>
-            )}
-          </Button>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="h-11 px-3"
-                onClick={() => setShowSearchOptions(!showSearchOptions)}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Настройки поиска</p>
-            </TooltipContent>
-          </Tooltip>
-        </form>
+  <div className="relative w-full"> {/* Заменили flex-1 на w-full */}
+    <Input
+      ref={searchInputRef}
+      type="search"
+      placeholder="Поиск товаров по названию, описанию, категории..."
+      value={searchTerm}
+      onChange={handleSearchChange}
+      className="w-full pr-20 border-primary/20 focus-visible:border-primary focus-visible:ring-primary/20 bg-background placeholder:text-muted-foreground/70 h-11" // Добавлен w-full
+      disabled={loading}
+    />
+    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
+      <Search className="h-5 w-5" />
+    </div>
+    {/* Индикаторы поиска */}
+    <div className="absolute right-10 top-1/2 transform -translate-y-1/2 flex gap-1">
+      {hasSearchFilters && (
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge variant="outline" className="h-5 px-1 text-xs">
+              Поиск
+            </Badge>
+          </TooltipTrigger>
+        </Tooltip>
+      )}
+    </div>
+  </div>
+  
+  <Button 
+    type="submit" 
+    disabled={loading}
+    size="lg"
+    className="h-11 px-6"
+  >
+    Найти
+  </Button>
+</form>
 
-        {/* Настройки поиска */}
-        {showSearchOptions && (
-          <div className="bg-muted/20 border border-border rounded-lg p-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-sm flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Настройки поиска
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Регистр */}
-              <div className="flex items-center space-x-3">
-                <Switch
-                  id="case-sensitive"
-                  checked={caseSensitive}
-                  onCheckedChange={onCaseSensitiveChange}
-                />
-                <Label htmlFor="case-sensitive" className="text-sm">
-                  Учитывать регистр
-                </Label>
-              </div>
-            </div>
-
-            {/* Поля для поиска */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Поля для поиска:</Label>
-              <div className="flex flex-wrap gap-2">
-                {searchFieldOptions.map(({ value, label, icon: Icon }) => (
-                  <Button
-                    key={value}
-                    type="button"
-                    variant={searchInFields.includes(value) ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleSearchFieldToggle(value)}
-                    className="h-7 text-xs"
-                  >
-                    <Icon className="h-3 w-3 mr-1" />
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Примеры поиска */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Примеры поиска:</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                <div className="bg-muted/50 p-2 rounded">
-                  <code>смарт</code> - поиск по названию
-                </div>
-                <div className="bg-muted/50 p-2 rounded">
-                  <code>часы</code> - поиск по описанию
-                </div>
-                <div className="bg-muted/50 p-2 rounded">
-                  <code>android</code> - поиск по категории
-                </div>
-                <div className="bg-muted/50 p-2 rounded">
-                  <code>DT8</code> - поиск по артикулу
-                </div>
-                <div className="bg-muted/50 p-2 rounded">
-                  <code>WiFi</code> - поиск по всем полям
-                </div>
-                <div className="bg-muted/50 p-2 rounded">
-                  <code>планшет</code> - поиск по названию и описанию
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        
 
         {/* Расширенные фильтры */}
         {showAdvancedFilters && (

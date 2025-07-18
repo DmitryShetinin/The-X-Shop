@@ -5,14 +5,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
  
-
-
 import { Product } from "@/types/product";
 import ProductForm from "@/components/admin/ProductForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductTabContent from "@/components/admin/products/ProductTabContent";
-import { useProductManagement } from "@/hooks/useProductManagement";
-import { API_BASE_URL } from "@/types/variables";
+
 import {
   fetchProductsFromPostgres,
   addOrUpdateProduct,

@@ -19,6 +19,7 @@ interface GeneralInfoTabProps {
   handleMainImageUploaded: (url: string) => void;
   handleAdditionalImagesChange: (urls: string[]) => void;
   onMainImageFileSelected?: (file: File | null) => void;
+  handleStockQuantityChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const GeneralInfoTab = ({
@@ -33,7 +34,8 @@ const GeneralInfoTab = ({
   handleCheckboxChange,
   handleMainImageUploaded,
   handleAdditionalImagesChange,
-  onMainImageFileSelected
+  onMainImageFileSelected,
+  handleStockQuantityChange
 }: GeneralInfoTabProps) => {
   
   return (
@@ -55,6 +57,8 @@ const GeneralInfoTab = ({
         formData={formData}
         handleInputChange={handleInputChange}
         handleCheckboxChange={handleCheckboxChange}
+        handleStockQuantityChange={handleStockQuantityChange}
+      
       />
 
       {/* Product Flags */}

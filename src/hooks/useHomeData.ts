@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from "react";
-import { getBestsellers, getNewProducts, getAllCategories, getCategoryObjects } from "@/data/products";
+import { getBestsellers, getNewProducts, getAllCategories, getCategoryObjects, Category } from "@/data/products";
 import { Product } from "@/types/product";
-import { Category } from "@/data/products/categoryData";
+ 
 
 export const useHomeData = () => {
   const [bestsellers, setBestsellers] = useState<Product[]>([]);
