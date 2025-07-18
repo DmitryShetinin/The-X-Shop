@@ -6,13 +6,14 @@ import AdminActions from './AdminActions';
 import AdminSearchResult from './AdminSearchResult';
 import useAdminStatus from '@/hooks/useAdminStatus';
 import { useAuth } from '@/context/AuthContext';
+import { profile } from 'console';
 
 const AdminManager = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<{ email: string; isAdmin: boolean, id: string } | null>(null);
-  const { profile } = useAuth();
-  const { isSuperAdmin } = useAdminStatus(profile);
+  const { user } = useAuth();
+  const { isSuperAdmin } = useAdminStatus(user);
 
   // Check if email exists and if it has admin role (через backend)
   const checkUserExistsAndIsAdmin = async (email: string) => {

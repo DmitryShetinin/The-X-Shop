@@ -176,7 +176,7 @@ const Catalog = () => {
         <meta itemProp="description" content={seoData.description} />
         
         {/* Mobile filters toggle */}
-        <div className="md:hidden mb-4">
+        {/* <div className="md:hidden mb-4">
           <Button 
             variant="outline" 
             className="w-full flex items-center justify-center gap-2"
@@ -185,7 +185,7 @@ const Catalog = () => {
             <Filter className="h-4 w-4" />
             Фильтры {activeFiltersCount > 0 && `(${activeFiltersCount})`}
           </Button>
-        </div>
+        </div> */}
 
         <CatalogFilters 
           availableCategories={availableCategories}

@@ -19,14 +19,14 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
   const handleQuantityChange = (value: number) => {
     if (value >= 1) {
       // Check against the selected color variant's stock if applicable
-      if (selectedColorVariant?.stockQuantity !== undefined && value > selectedColorVariant.stockQuantity) {
-        onChange(selectedColorVariant.stockQuantity);
+      if (selectedColorVariant?.stock_quantity !== undefined && value > selectedColorVariant.stock_quantity) {
+        onChange(selectedColorVariant.stock_quantity);
         return;
       }
       
       // Otherwise check against the main product stock
-      if (product.stockQuantity !== undefined && value > product.stockQuantity) {
-        onChange(product.stockQuantity);
+      if (product.stock_quantity !== undefined && value > product.stock_quantity) {
+        onChange(product.stock_quantity);
       } else {
         onChange(value);
       }
@@ -52,10 +52,10 @@ const QuantitySelector: React.FC<QuantitySelectorProps> = ({
           onClick={() => handleQuantityChange(quantity + 1)}
           // Check against variant stock if applicable
           disabled={
-            (selectedColorVariant?.stockQuantity !== undefined && 
-             quantity >= selectedColorVariant.stockQuantity) ||
-            (product.stockQuantity !== undefined && 
-             quantity >= product.stockQuantity)
+            (selectedColorVariant?.stock_quantity !== undefined && 
+             quantity >= selectedColorVariant.stock_quantity) ||
+            (product.stock_quantity !== undefined && 
+             quantity >= product.stock_quantity)
           }
         >
           +

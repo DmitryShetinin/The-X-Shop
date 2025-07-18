@@ -1,11 +1,21 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart, Package, Users, ChevronRight } from "lucide-react";
+import { ShoppingCart, Package, Users, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { getActiveProducts } from "@/data/products";
-// import { supabase } from "@/integrations/supabase/client";
+import { getAllOrders } from "@/services/orderService";
+import { getTotalUsersCount } from "@/services/userService";
+import { toast } from "sonner";
+
+function calculateTotalRevenue(orders) {
+  // Используем reduce для аккумуляции суммы
+  return orders.reduce((total, order) => {
+      // Преобразуем order.total в число и добавляем к аккумулятору
+      return total + Number(order.total);
+  }, 0); // Начальное значение аккумулятора - 0
+}
+
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -14,58 +24,69 @@ const AdminDashboard = () => {
     totalCustomers: 0,
     totalRevenue: 0
   });
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
       try {
-        // Get products count
-        const products = await getActiveProducts();
+        // Получаем данные параллельно для оптимизации
+        const [productsResponse, ordersResponse, usersResponse] = await Promise.all([
+          getActiveProducts(),
+          getAllOrders(),
+          getTotalUsersCount()
+        ]);
         
-        // Get orders that are not archived
-        // const { data: orders, error: ordersError } = await supabase
-        //   .from('orders')  
-        //   .select('*')
-        //   .not('status', 'eq', 'archived');
-          
-        // if (ordersError) throw ordersError;
-        
-        // Get distinct customers count
-        // const { data: profiles, error: profilesError } = await supabase
-        //   .from('profiles')
-        //   .select('id');
-          
-        // if (profilesError) throw profilesError;
-        
-        // Calculate stats
-        const totalProducts = products.length;
-        const totalOrders = 0; // Все обращения к supabase удалены. Временно убрана загрузка orders и profiles.
-        const totalCustomers = 0; // Все обращения к supabase удалены. Временно убрана загрузка orders и profiles.
-        const totalRevenue = 0; // Все обращения к supabase удалены. Временно убрана загрузка orders и profiles.
-        
+        // Обрабатываем результаты
+        const totalProducts = productsResponse.length;
+       
+        const totalOrders = ordersResponse.success 
+          ? ordersResponse.orders.length || 0 
+          : 0;
+
+        const totalCustomers = usersResponse.success 
+          ? usersResponse.count || 0 
+          : 0;
+
         setStats({
           totalProducts,
           totalOrders,
           totalCustomers,
-          totalRevenue
+          totalRevenue: calculateTotalRevenue(ordersResponse.orders) // Пока оставляем 0
         });
+        
+        setLastUpdated(new Date());
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
+        toast.error("Ошибка загрузки данных дашборда");
+      } finally {
+        setLoading(false);
       }
     };
     
     fetchStats();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-12 w-12 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Дашборд</h2>
         <div className="text-sm text-muted-foreground">
-          Последнее обновление: {new Date().toLocaleString()}
+          Последнее обновление: {lastUpdated.toLocaleString()}
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Карточка заказов */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Всего заказов</CardTitle>
@@ -84,6 +105,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
         
+        {/* Карточка товаров */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Товары</CardTitle>
@@ -102,6 +124,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
         
+        {/* Карточка клиентов */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Клиенты</CardTitle>
@@ -120,6 +143,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
         
+        {/* Карточка выручки */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Выручка</CardTitle>
@@ -150,6 +174,7 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
+      {/* Руководство */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="col-span-full">
           <CardHeader>

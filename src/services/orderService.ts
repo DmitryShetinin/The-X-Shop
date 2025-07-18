@@ -18,21 +18,9 @@ export async function getUserOrders(userId: string) {
   }
 }
 
-// Получить все заказы с backend API
-export async function getAllOrders() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/orders`);
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-      console.error('Error fetching all orders:', result.error);
-      return { success: false, error: result.error || { message: 'Ошибка при загрузке заказов' } };
-    }
-    return { success: true, orders: result.orders };
-  } catch (error) {
-    console.error('Unexpected error fetching all orders:', error);
-    return { success: false, error };
-  }
-}
+ 
+
+
 
 // Новый вариант placeOrder: отправка заказа на backend API
 export async function placeOrder(orderData: {
@@ -102,6 +90,23 @@ export async function updateOrderTracking(orderId: string, trackingNumber: strin
     return { success: true, order: result.order };
   } catch (error) {
     console.error('Unexpected error updating order tracking:', error);
+    return { success: false, error };
+  }
+}
+
+ 
+
+export async function getAllOrders() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/orders`);
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      console.error('Error fetching all orders:', result.error);
+      return { success: false, error: result.error || { message: 'Ошибка при загрузке заказов' } };
+    }
+    return { success: true, orders: result.orders };
+  } catch (error) {
+    console.error('Unexpected error fetching all orders:', error);
     return { success: false, error };
   }
 }

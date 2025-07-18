@@ -10,12 +10,29 @@ import ColorSelection from "@/components/products/ColorSelection";
 import QuantitySelector from "@/components/products/QuantitySelector";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
+import  Carousel  from '../ui/mainCarousel.jsx';
+
+
+const isVideo = (url: string) => /\.(mp4|webm|mov|avi)$/i.test(url);
+
+const prepareMediaForCarousel = (mediaUrls: string[]) => {
+  return mediaUrls.map(url => {
+    const isVideoFile = isVideo(url);
+    const filename = url.split('/').pop()?.trim() || ''; // Удаляем пробелы в конце, если есть
+    
+    return {
+      type: isVideoFile ? 'video' : 'image',
+      mediaUrl: url,
+      thumbnailUrl: url, // Используем тот же URL для миниатюры
+    };
+  });
+};
+
 
 interface ProductDetailsSectionProps {
   product: Product;
   selectedColor?: string;
   displayPrice: number;
-  hasStock: boolean;
   displayArticleNumber?: string;
   onColorChange: (color: string) => void;
   onAddToCart: () => void;
@@ -27,7 +44,6 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   product,
   selectedColor,
   displayPrice,
-  hasStock,
   displayArticleNumber,
   onColorChange,
   onAddToCart,
@@ -37,7 +53,21 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
   const selectedColorVariant = product?.colorVariants?.find(
     v => v.color === selectedColor
   );
-  
+ 
+  const localMedia = [
+    `/images/${product.imageUrl}`,
+    "/images/00099aa0-4965-4836-89c9-6a5533fe4e4e.png",
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  ];
+
+  const isProductInStock = () => {
+    if (!product) return false;
+    if (selectedColorVariant) {
+      return selectedColorVariant.stockQuantity !== undefined && selectedColorVariant.stockQuantity > 0;
+    }
+    return product.stockQuantity !== undefined && product.stockQuantity > 0;
+  };
+
   const getVariantImage = () => {
     if (selectedColor && product?.colorVariants) {
       const variant = product.colorVariants.find(v => v.color === selectedColor);
@@ -48,25 +78,17 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
     return product?.imageUrl || "";
   };
  
-  console.log('ProductDetailsSection rendering with product:', product.title);
-
+ 
+  const inStock = isProductInStock();
+  console.log(product)
   return (
     <div className="grid md:grid-cols-2 gap-8">
       {/* Left side - images */}
       <div>
-        <ImageGallery 
-          mainImage={ `/images/${getVariantImage()}` || 'not-found.jpg' } 
-          additionalImages={product.additionalImages} 
+         <Carousel 
+           slides={prepareMediaForCarousel(localMedia)}
         />
-        
-        {/* Video if available */}
-        {product.videoUrl && (
-          <ProductVideo 
-            videoUrl={product.videoUrl} 
-            videoType={product.videoType} 
-            imageUrl={product.imageUrl} 
-          />
-        )}
+         
       </div>
 
       {/* Right side - product information */}
@@ -84,25 +106,22 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
         </div>
         
         {/* Add stock status indicator */}
-        <StockStatus 
-          product={product} 
-          selectedColor={selectedColor} 
-          hasStock={hasStock} 
-        />
+      
         
         {/* Pricing */}
         <div itemProp="offers" itemScope itemType="https://schema.org/Offer">
           <ProductPricing 
             product={product} 
-            selectedColorVariant={selectedColorVariant} 
+            selectedColorVariant={selectedColorVariant}
+            quantity={quantity} 
           />
           <meta itemProp="priceCurrency" content="RUB" />
-          <meta itemProp="price" content={displayPrice.toString()} />
-          <link itemProp="availability" href={hasStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"} />
+ 
+          <link itemProp="availability" href={inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"} />
         </div>
         
-        {/* Marketplace links */}
-        <MarketplaceLinks product={product} />
+      
+        <MarketplaceLinks product={product} className="mb-3" />
         
         {/* Color selection */}
         <ColorSelection 
@@ -125,10 +144,10 @@ const ProductDetailsSection: React.FC<ProductDetailsSectionProps> = ({
             size="lg" 
             className="w-full"
             onClick={onAddToCart}
-            disabled={!hasStock}
+            disabled={!inStock}
           >
             <ShoppingCart className="mr-2 h-5 w-5" />
-            {hasStock ? `Купить за ${displayPrice} ₽` : "Нет в наличии"}
+            {inStock ? `Купить за ${displayPrice} ₽` : "Нет в наличии"}
           </Button>
         </div>
       </div>

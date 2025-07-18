@@ -34,7 +34,7 @@ const ProductDetailContainer: React.FC<ProductDetailContainerProps> = ({
   onQuantityChange,
   currentProductId
 }) => {
-  console.log(product)
+ 
   return (
     <main className="flex-grow container px-4 py-8 md:px-6" itemScope itemType="https://schema.org/Product">
       {/* Основные Schema.org атрибуты для товара */}
@@ -45,11 +45,16 @@ const ProductDetailContainer: React.FC<ProductDetailContainerProps> = ({
       <meta itemProp="mpn" content={displayArticleNumber || product.id} />
       <meta itemProp="category" content={product.category} />
       
+
+    
+
       {/* Бренд */}
       <div itemProp="brand" itemScope itemType="https://schema.org/Brand" style={{ display: 'none' }}>
         <meta itemProp="name" content="The X Shop" />
       </div>
       
+      
+
       {/* Производитель */}
       <div itemProp="manufacturer" itemScope itemType="https://schema.org/Organization" style={{ display: 'none' }}>
         <meta itemProp="name" content="The X Shop" />
@@ -88,18 +93,18 @@ const ProductDetailContainer: React.FC<ProductDetailContainerProps> = ({
       />
       
       <ProductHeader title={product.title} category={product.category} />
-
       <ProductDetailsSection
         product={product}
         selectedColor={selectedColor}
         displayPrice={displayPrice}
-        hasStock={hasStock}
+   
         displayArticleNumber={displayArticleNumber}
         onColorChange={onColorChange}
         onAddToCart={onAddToCart}
         quantity={quantity}
         onQuantityChange={onQuantityChange}
       />
+    
 
       {/* Product description */}
       <div itemProp="description">

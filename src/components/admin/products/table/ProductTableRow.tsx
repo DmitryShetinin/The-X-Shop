@@ -161,7 +161,7 @@ const ProductTableRow = ({
         </div>
       </TableCell>
       <TableCell>
-        {hasMarketplaceLinks(product) ? (
+        {true ? (
           <div className="flex gap-1">
             {product.wildberriesUrl && (
               <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center" title="Доступен на Wildberries">

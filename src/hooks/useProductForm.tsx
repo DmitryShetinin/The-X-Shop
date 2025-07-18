@@ -99,6 +99,13 @@ export const useProductForm = ({ product, onSave }: UseProductFormProps) => {
     });
   };
 
+  const handleStockQuantityChange = (value: number | "") => {
+    setFormData(prev => ({
+      ...prev,
+      stockQuantity: value === "" ? undefined : value
+    }));
+  };
+
   const validateForm = (): boolean => {
     // Validate required fields
     if (!formData.title) {
@@ -170,6 +177,7 @@ export const useProductForm = ({ product, onSave }: UseProductFormProps) => {
 
   return {
     formData,
+    setFormData,
     newCategory,
     showNewCategoryInput,
     activeTab,
@@ -183,6 +191,7 @@ export const useProductForm = ({ product, onSave }: UseProductFormProps) => {
     handleColorVariantsChange,
     handleRemoveColor,
     handleRelatedColorProductsChange,
+    handleStockQuantityChange, // Add this to the returned object
     validateAndSubmitForm,
     setNewCategory,
     setShowNewCategoryInput

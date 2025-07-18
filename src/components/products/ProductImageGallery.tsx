@@ -15,16 +15,21 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
   selectedColorVariant, 
   onColorVariantSelect 
 }) => {
-  const [selectedImage, setSelectedImage] = useState<string>(product.imageUrl);
+  const [selectedImage, setSelectedImage] = useState<string>(product.image_url);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-
+  console.log(product)
   // Collect all available images
+  // const allImages = [
+  //   product.image_url,
+  //   ...(product.additionalImages || []),
+  //   ...(product.colorVariants?.filter(v => v.imageUrl)?.map(v => v.imageUrl as string) || [])
+  // ].filter(Boolean);
+
   const allImages = [
-    product.imageUrl,
-    ...(product.additionalImages || []),
-    ...(product.colorVariants?.filter(v => v.imageUrl)?.map(v => v.imageUrl as string) || [])
-  ].filter(Boolean);
+    "https://yourdomain.com/images/00d32ae6-3060-4cb7-85c8-91ef1df0cbd0.png ",
+    "https://yourdomain.com/images/00b6e599-0376-4990-ac1b-b31b842005fe.jpg "
+  ];
 
   const handleThumbnailClick = (image: string) => {
     setSelectedImage(image);
@@ -71,10 +76,10 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
       <div className="grid grid-cols-5 gap-2">
          <button
           className={`aspect-[3/4] rounded-md overflow-hidden border-2 ${selectedImage === product.imageUrl ? 'border-primary' : 'border-transparent'}`}
-          onClick={() => handleThumbnailClick(product.imageUrl)}
+          onClick={() => handleThumbnailClick(product.image_url)}
         >
           <img 
-            src={product.imageUrl} 
+            src={product.image_url} 
             alt={product.title} 
             className="object-cover w-full h-full"
             onError={(e) => {

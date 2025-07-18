@@ -136,8 +136,8 @@ export const sendToTelegram = async (response: any): Promise<boolean> => {
 
       console.log("Сформированное сообщение:", message);
       
-      // Отправка сообщения (ваша реализация sendMessage)
-      return await sendMessage(message, {
+      // Отправка сообщения (ваша реализация sendTelegramMessage)
+      return await sendTelegramMessage(message, {
           name: order.customer_name,
           email: order.customer_email
       });
@@ -147,7 +147,7 @@ export const sendToTelegram = async (response: any): Promise<boolean> => {
   }
 };
 
-export const sendMessage = async (
+export const sendTelegramMessage = async (
   message: string,
   userInfo?: { name?: string; email?: string }
 ): Promise<boolean> => {
@@ -155,15 +155,10 @@ export const sendMessage = async (
     const chatId = getChatId();
     const deviceInfo = getDeviceInfo();
  
-    // Все импорты supabase и вызовы supabase.functions.invoke удалены
-    // Временные заглушки:
     console.log("Отправка сообщения (заглушка):", message);
     console.log("Пользователь:", userInfo);
     console.log("Чат ID:", chatId);
     console.log("Устройство:", deviceInfo);
-
-    // Формируем текст сообщения (добавим userInfo, если есть)
-  
 
     const url = `https://api.telegram.org/bot8139116930:AAHDuUQt4P1exwlEby24VC1nmSmDMAu6SUg/sendMessage`;
     const response = await fetch(url, {
@@ -190,12 +185,153 @@ export const sendMessage = async (
     console.log('Ответ Telegram:', data);
     return true;
   } catch (error) {
-    console.error('Ошибка в sendMessage:', error);
+    console.error('Ошибка в sendTelegramMessage:', error);
     return false;
   }
 };
 
-// Получение истории сообщений
+export const sendMessage = async (
+  userId: string,
+  text: string,
+  senderId?: string
+): Promise<ChatMessage | null> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat/${userId}/send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text, senderId }),
+    });
+    if (!response.ok) {
+      console.error('Ошибка при отправке сообщения:', response.status, await response.text());
+      return null;
+    }
+    const data = await response.json();
+    return {
+      id: data.id,
+      chat_id: userId,
+      message: data.text,
+      is_from_admin: data.senderId === 'admin',
+      is_read: data.is_read ?? false,
+      created_at: data.createdAt,
+    };
+  } catch (error) {
+    console.error("Ошибка в sendMessage:", error);
+    return null;
+  }
+};
+
+export const getUnreadMessagesCount = async (userId: string): Promise<number> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat/${userId}/unread-count`);
+    if (!response.ok) {
+      console.error('Ошибка при получении непрочитанных сообщений:', response.status, await response.text());
+      return 0;
+    }
+    const data = await response.json();
+    return data.unreadCount || 0;
+  } catch (error) {
+    console.error("Ошибка в getUnreadMessagesCount:", error);
+    return 0;
+  }
+};
+
+export const getChatHistory = async (userId : string): Promise<ChatMessage[]> => {
+  try {
+    const chatId = getChatId();
+    const response = await fetch(`${API_BASE_URL}/chat/${userId}/history`);
+    if (!response.ok) {
+      console.error('Ошибка при получении истории сообщений:', response.status, await response.text());
+      return [];
+    }
+    const data = await response.json();
+    return data.map((msg: any) => ({
+      id: msg.id,
+      chat_id: chatId,
+      message: msg.text,
+      is_from_admin: msg.isAdmin || msg.is_from_admin || msg.senderId === 'admin',
+      is_read: msg.is_read ?? true,
+      created_at: msg.createdAt || msg.created_at
+    }));
+  } catch (error) {
+    console.error("Ошибка в getChatHistory:", error);
+    return [];
+  }
+};
+
+export const markAllMessagesAsRead = async (userId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat/${userId}/mark-all-read`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      console.error('Ошибка при отметке всех сообщений как прочитанных:', response.status, await response.text());
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Ошибка в markAllMessagesAsRead:", error);
+    return false;
+  }
+};
+
+export const checkTelegramWebhookStatus = async (): Promise<any> => {
+  console.log("Проверка статуса webhook (заглушка)");
+  return { ok: false };
+};
+
+export const checkChatStatus = async (): Promise<{
+  ok: boolean;
+  config?: {
+    telegram_bot_token_set: boolean;
+    telegram_admin_chat_id_set: boolean;
+    supabase_url_set: boolean;
+    supabase_service_role_key_set: boolean;
+  };
+}> => {
+  console.log("Проверка статуса чата (заглушка)");
+  return {
+    ok: false,
+    config: {
+      telegram_bot_token_set: false,
+      telegram_admin_chat_id_set: false,
+      supabase_url_set: false,
+      supabase_service_role_key_set: false
+    }
+  };
+};
+
+export const pollForNewMessages = async (
+  lastMessageId: number | null,
+  callback: (messages: ChatMessage[]) => void
+): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat/poll?lastMessageId=${lastMessageId || ''}`);
+    if (!response.ok) {
+      console.error('Ошибка при опросе новых сообщений:', response.status, await response.text());
+      return;
+    }
+    const newMessages = await response.json();
+    if (newMessages && newMessages.length > 0) {
+      callback(newMessages);
+    }
+  } catch (error) {
+    console.error("Ошибка в pollForNewMessages:", error);
+  }
+};
+
+export const setupTelegramWebhook = async (url: string): Promise<boolean> => {
+  console.log("Настройка webhook (заглушка) для URL:", url);
+  return false;
+};
+
+export const syncChatAcrossDevices = async (): Promise<void> => {
+  const chatId = getChatId();
+  console.log("Синхронизация чата между устройствами (заглушка) для ID:", chatId);
+};
+
+
 export const getMessages = async (userId : string): Promise<ChatMessage[]> => {
   try {
     const chatId = getChatId();
@@ -218,110 +354,5 @@ export const getMessages = async (userId : string): Promise<ChatMessage[]> => {
   } catch (error) {
     console.error("Ошибка в getMessages:", error);
     return [];
-  }
-};
-
-// Отметка сообщений как прочитанных
-export const markMessagesAsRead = async (): Promise<boolean> => {
-  try {
-    const chatId = getChatId();
-    
-    // Все импорты supabase и вызовы supabase.functions.invoke удалены
-    // Временные заглушки:
-    console.log("Отметка сообщений как прочитанных (заглушка) для chat ID:", chatId);
-    return true; // Заглушка
-  } catch (error) {
-    console.error("Ошибка в markMessagesAsRead:", error);
-    return false;
-  }
-};
-
-// Проверка статуса webhook Telegram
-export const checkTelegramWebhookStatus = async (): Promise<any> => {
-  try {
-    // Все импорты supabase и вызовы supabase.functions.invoke удалены
-    // Временные заглушки:
-    console.log("Проверка статуса webhook (заглушка)");
-    return { ok: false }; // Заглушка
-  } catch (error) {
-    console.error("Ошибка в checkTelegramWebhookStatus:", error);
-    return { ok: false };
-  }
-};
-
-// Проверка состояния функции telegram-chat
-export const checkChatStatus = async (): Promise<{
-  ok: boolean;
-  config?: {
-    telegram_bot_token_set: boolean;
-    telegram_admin_chat_id_set: boolean;
-    supabase_url_set: boolean;
-    supabase_service_role_key_set: boolean;
-  };
-}> => {
-  try {
- 
-    // Все импорты supabase и вызовы supabase.functions.invoke удалены
-    // Временные заглушки:
-    console.log("Проверка статуса чата (заглушка)");
-    return { 
-      ok: false, // Заглушка
-      config: {
-        telegram_bot_token_set: false,
-        telegram_admin_chat_id_set: false,
-        supabase_url_set: false,
-        supabase_service_role_key_set: false
-      } // Заглушка
-    };
-  } catch (error) {
-    console.error("Ошибка в checkChatStatus:", error);
-    return { ok: false };
-  }
-};
-
-// Проверка на наличие новых сообщений
-export const pollForNewMessages = async (
-  lastMessageId: number | null,
-  callback: (messages: ChatMessage[]) => void
-): Promise<void> => {
-  try {
-    const messages = await getMessages();
-    
-    if (messages.length === 0) return;
-    
-    const latestMessageId = Math.max(...messages.map(m => m.id));
-    
-    if (lastMessageId === null || latestMessageId > lastMessageId) {
-      callback(messages);
-    }
-  } catch (error) {
-    // Ошибка опроса сообщений (console.error удалён)
-  }
-};
-
-// Настройка webhook для Telegram
-export const setupTelegramWebhook = async (url: string): Promise<boolean> => {
-  try {
-    // Все импорты supabase и вызовы supabase.functions.invoke удалены
-    // Временные заглушки:
-    console.log("Настройка webhook (заглушка) для URL:", url);
-    return false; // Заглушка
-  } catch (error) {
-    console.error("Ошибка в setupTelegramWebhook:", error);
-    return false;
-  }
-};
-
-// Синхронизация чата между устройствами
-export const syncChatAcrossDevices = async (): Promise<void> => {
-  try {
-    const chatId = getChatId();
-    console.log("Синхронизация чата между устройствами для ID:", chatId);
-    
-    // Все импорты supabase и вызовы supabase.functions.invoke удалены
-    // Временные заглушки:
-    console.log("Синхронизация чата между устройствами (заглушка) для ID:", chatId);
-  } catch (error) {
-    console.error("Ошибка в syncChatAcrossDevices:", error);
   }
 };

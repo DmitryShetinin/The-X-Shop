@@ -180,6 +180,32 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
+// Get total orders count (excluding archived)
+app.get('/api/orders/count', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT COUNT(*) FROM orders WHERE status != 'archived'");
+    const totalOrders = parseInt(result.rows[0].count, 10);
+    console.log(`✅ API: Loaded total orders count: ${totalOrders}`);
+    res.json({ totalOrders });
+  } catch (error) {
+    console.error('❌ API: Error loading total orders count:', error);
+    res.status(500).json({ error: 'Failed to load total orders count' });
+  }
+});
+
+// Get total users count
+app.get('/api/users/count', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT COUNT(*) FROM users");
+    const totalUsers = parseInt(result.rows[0].count, 10);
+    console.log(`✅ API: Loaded total users count: ${totalUsers}`);
+    res.json({ totalUsers });
+  } catch (error) {
+    console.error('❌ API: Error loading total users count:', error);
+    res.status(500).json({ error: 'Failed to load total users count' });
+  }
+});
+
 // Создание заказа
 app.post('/api/orders', async (req, res) => {
   try {
@@ -771,23 +797,7 @@ app.post('/api/chat/:userId/send', async (req, res) => {
   }
 });
 
-app.get('/api/chat/:userId/unread-count', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const result = await pool.query(
-      `SELECT COUNT(*) 
-       FROM messages 
-       WHERE user_id = $1 
-         AND is_read = false 
-         AND sender_id = 'admin'`,
-      [userId]
-    );
-    res.json({ count: parseInt(result.rows[0].count) });
-  } catch (error) {
-    console.error('Error fetching unread count:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+
 
 app.post('/api/chat/mark-read/:messageId', async (req, res) => {
   try {
@@ -818,6 +828,24 @@ app.post('/api/chat/:userId/mark-all-read', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Получение количества непрочитанных сообщений для пользователя
+app.get('/api/chat/:userId/unread-count', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const result = await pool.query(
+      `SELECT COUNT(*) FROM messages 
+       WHERE user_id = $1 AND is_read = false AND sender_id = 'admin'`,
+      [userId]
+    );
+    res.json({ unreadCount: parseInt(result.rows[0].count, 10) });
+  } catch (error) {
+    console.error('Error fetching unread message count:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+ 
 
 
 // Настройка WebSocket сервера

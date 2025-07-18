@@ -154,9 +154,8 @@ const ProductDetail = () => {
   if (error || !product) {
     return <ProductNotFound />;
   }
-  console.log("product111")
- console.log(product)
-  // Подготовка расширенной SEO данных для товара
+ 
+   // Подготовка расширенной SEO данных для товара
   const productSEO = {
     title: `${product.title} - купить в The X Shop`,
     description: product.description ? 

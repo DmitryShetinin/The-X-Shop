@@ -67,9 +67,9 @@ export const useChatMessages = (isOpen: boolean) => {
       }
     };
 
-    ws.onopen = () => {
-      fetchUnreadCount(); // Вызываем fetchUnreadCount при открытии WebSocket
-    };
+    // ws.onopen = () => {
+    //   fetchUnreadCount(); // Вызываем fetchUnreadCount при открытии WebSocket
+    // };
 
     ws.onclose = () => {
       wsRef.current = null;

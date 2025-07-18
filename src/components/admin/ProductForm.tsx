@@ -1,13 +1,13 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/types/product";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeneralInfoTab from "./product-form/GeneralInfoTab";
 import AdditionalInfoTab from "./product-form/AdditionalInfoTab";
+import {ProductPricing} from "./product-form/sections/ProductPricing"; // Import ProductPricing
 import { useProductForm } from "@/hooks/useProductForm";
-import { toast } from "sonner";
-import { API_BASE_URL } from "@/types/variables";
+ 
  
 
 interface ProductFormProps {
@@ -33,32 +33,12 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
     handleAdditionalImagesChange,
     validateAndSubmitForm: baseValidateAndSubmitForm,
     setNewCategory,
-    setShowNewCategoryInput
-  } = useProductForm({ product, onSave: handleSave });
-
-  async function handleSave(finalProduct: Partial<Product>) {
-    // If a file is selected, upload it first
-    if (mainImageFile) {
-      try {
-        const formData = new FormData();
-        formData.append('file', mainImageFile);
-        const response = await fetch(`${API_BASE_URL}/upload`, {
-          method: 'POST',
-          body: formData,
-        });
-        if (!response.ok) throw new Error('Ошибка загрузки файла');
-        const { url } = await response.json();
-        finalProduct.imageUrl = url;
-      } catch (error: any) {
-        toast.error('Ошибка загрузки изображения', {
-          description: error.message || 'Произошла ошибка при загрузке файла',
-        });
-        return;
-      }
-    }
-    await onSave(finalProduct);
-  }
-
+    setShowNewCategoryInput,
+    handleStockQuantityChange
+  } = useProductForm( {product, onSave} );
+  
+  // Handle stock quantity change, pass it down to ProductPricing
+ 
   // Adapter for file selection
   const handleMainImageFileSelected = (file: File | null) => {
     setMainImageFile(file);
@@ -96,6 +76,7 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
             handleMainImageUploaded={handleMainImageUploaded}
             handleAdditionalImagesChange={handleAdditionalImagesChange}
             onMainImageFileSelected={handleMainImageFileSelected}
+            handleStockQuantityChange={handleStockQuantityChange}
           />
         </TabsContent>
 
@@ -104,6 +85,15 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
             formData={formData}
             handleInputChange={handleInputChange}
             handleSelectChange={handleSelectChangeAdapter} // Use the adapter function here
+          />
+        </TabsContent>
+
+        <TabsContent value="pricing" className="pt-4">
+          <ProductPricing
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleCheckboxChange={handleCheckboxChangeAdapter}
+            handleStockQuantityChange={handleStockQuantityChange}
           />
         </TabsContent>
       </Tabs>

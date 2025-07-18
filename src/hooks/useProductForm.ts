@@ -137,6 +137,30 @@ export function useProductForm({ product, onSave }: UseProductFormProps) {
     return true;
   };
 
+  const handleStockQuantityChangeAdapter = (value: number | undefined) => {
+  setFormData(prev => ({
+    ...prev,
+    stockQuantity: value,
+    inStock: value !== undefined && value > 0
+  }));
+};
+
+
+  const handleStockQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    if (value === "") {
+      handleStockQuantityChangeAdapter(undefined);
+      return;
+    }
+    
+    const numValue = parseInt(value, 10);
+    
+    if (!isNaN(numValue)) {
+      handleStockQuantityChangeAdapter(numValue);
+  }
+  };
+
   const validateAndSubmitForm = async () => {
     if (!validateForm()) {
       return;
@@ -166,6 +190,7 @@ export function useProductForm({ product, onSave }: UseProductFormProps) {
 
   return {
     formData,
+    setFormData,
     newCategory,
     showNewCategoryInput,
     activeTab,
@@ -181,6 +206,7 @@ export function useProductForm({ product, onSave }: UseProductFormProps) {
     handleRelatedColorProductsChange,
     validateAndSubmitForm,
     setNewCategory,
-    setShowNewCategoryInput
+    setShowNewCategoryInput,
+    handleStockQuantityChange
   };
 }
