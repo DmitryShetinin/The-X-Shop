@@ -12,7 +12,7 @@ const GridCatalog = ({
   columnsClass
 }) => {
   // Конфигурация
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
   const totalPages = Math.ceil(products.length / itemsPerPage);
   
   // Состояние
@@ -60,13 +60,9 @@ const GridCatalog = ({
 
   return (
     <div className="catalog-container">
-      <div className="catalog-header">
-        {title && <h1>{title}</h1>}
-      </div>
-      
       <div className="catalog-wrapper">
         <div className="catalog-pages">
-          <div className={`grid ${columnsClass || "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"} gap-4`}>
+          <div className={`grid ${columnsClass || "grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"} gap-3`}>
             {getCurrentPageProducts().map(product => (
               <ProductCard 
                 key={product.id} 
@@ -78,29 +74,31 @@ const GridCatalog = ({
         </div>
       </div>
       
-      <div className="navigation">
-        <button 
-          className="nav-button" 
-          onClick={handlePrev}
-          disabled={currentPage === 0}
-        >
-          <i className="fas fa-chevron-left"></i>
-        </button>
-        <button 
-          className="nav-button" 
-          onClick={handleNext}
-          disabled={currentPage === totalPages - 1}
-        >
-          <i className="fas fa-chevron-right"></i>
-        </button>
-      </div>
-      
-      <div className="pagination">
-        {renderPaginationDots()}
-      </div>
-      
-      <div className="page-indicator">
-        Страница <span id="currentPage">{currentPage + 1}</span> из <span id="totalPages">{totalPages}</span>
+      {/* Исправленная навигация */}
+      <div className="navigation-container">
+        <div className="pagination">
+          {renderPaginationDots()}
+        </div>
+        
+        <div className="navigation">
+          <button 
+            className="nav-button" 
+            onClick={handlePrev}
+            disabled={currentPage === 0}
+          >
+            <i className="fas fa-chevron-left"></i>
+          </button>
+          <div className="page-indicator">
+            Страница <span id="currentPage">{currentPage + 1}</span> из <span id="totalPages">{totalPages}</span>
+          </div>
+          <button 
+            className="nav-button" 
+            onClick={handleNext}
+            disabled={currentPage === totalPages - 1}
+          >
+            <i className="fas fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   );
