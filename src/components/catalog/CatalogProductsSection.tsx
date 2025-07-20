@@ -1,7 +1,9 @@
 
 import React from "react";
 import { Product } from "@/types/product";
-import ProductGrid from "@/components/products/ProductGrid";
+
+import GridCatalog from "@/components/products/GridCatalog";
+
 import CatalogActiveFilters from "./CatalogActiveFilters";
 import CatalogHeader from "./CatalogHeader";
 import CatalogProductsInfo from "./CatalogProductsInfo";
@@ -86,7 +88,7 @@ const CatalogProductsSection: React.FC<CatalogProductsSectionProps> = ({
         </div>
       ) : (
         // Product grid display
-        <ProductGrid
+        <GridCatalog
           products={filteredProducts}
           showAsColorVariants={true}
           columnsClass="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"

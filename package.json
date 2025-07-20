@@ -53,6 +53,7 @@
     "embla-carousel-react": "^8.6.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "font-awesome": "^4.7.0",
     "framer-motion": "^12.19.1",
     "input-otp": "^1.4.2",
     "localforage": "^1.10.0",
