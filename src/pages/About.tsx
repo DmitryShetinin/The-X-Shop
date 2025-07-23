@@ -333,7 +333,7 @@ const About = () => {
                   viewport={{ once: true }}
                 >
                   <div className="inline-block bg-gradient-to-r from-cyan-600 to-blue-700 text-white text-sm font-medium py-1 px-4 rounded-full mb-6">
-                    Наша история
+                    Наша история 
                   </div>
                   
                   <h2 className="text-4xl font-bold mb-8 text-cyan-200">

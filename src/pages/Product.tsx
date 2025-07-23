@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getProductById, getRelatedProducts, getRelatedColorProducts } from "@/data/products";
 import { Product as ProductType, ColorVariant } from "@/types/product";
 import { ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import ProductGrid from "@/components/products/ProductGrid";
+ 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ProductImageGallery from "@/components/products/ProductImageGallery";
 import ProductInfo from "@/components/products/ProductInfo";
-import ProductDetails from "@/components/products/ProductDetails";
+ 
 import { trackPageView, trackProductView } from "@/utils/metrika";
 
 const Product = () => {
@@ -152,7 +152,7 @@ const Product = () => {
       <div className="container px-4 py-6 md:py-8 md:px-6 flex-grow">
         {/* Хлебные крошки - центрированы для мобильных */}
         <div className="flex flex-wrap justify-center items-center text-sm text-muted-foreground mb-6 gap-1 md:gap-2">
-          <Link to="/" className="hover:text-primary whitespace-nowrap">Главная</Link>
+          <Link to="/" className="hover:text-primary whitespace-nowrap">Главная </Link>
           <ChevronRight className="h-4 w-4" />
           <Link to="/catalog" className="hover:text-primary whitespace-nowrap">Каталог</Link>
           <ChevronRight className="h-4 w-4" />
@@ -189,7 +189,7 @@ const Product = () => {
         </div>
         
         {/* Детали товара (табы с информацией) */}
-        <div className="mt-8 md:mt-12 flex justify-center">
+        {/* <div className="mt-8 md:mt-12 flex justify-center">
           <div className="w-full max-w-2xl">
             <ProductDetails
               product={product}
@@ -197,17 +197,17 @@ const Product = () => {
               setSelectedTab={setSelectedTab}
             />
           </div>
-        </div>
+        </div> */}
         
-        {/* Связанные товары */}
+        {/* Связанные товары
         {relatedProducts.length > 0 && (
           <div className="mt-12 md:mt-16">
-            <h2 className="text-xl font-bold mb-6 text-center">Похожие товары</h2>
+      
             <div className="flex justify-center">
-              <ProductGrid products={relatedProducts} className="max-w-6xl" />
+              <ProductGrid products={relatedProducts}   />
             </div>
           </div>
-        )}
+        )} */}
       </div>
       <Footer />
     </div>

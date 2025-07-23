@@ -74,7 +74,7 @@ const ProductTableRow = ({
   const handleStockEditorClose = () => {
     setEditingStockId(false);
   };
-  console.log(product)
+ 
   return (
     <TableRow>
       {onSelectProduct && (

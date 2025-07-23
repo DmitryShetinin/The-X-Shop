@@ -2,7 +2,7 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import ImageUploader from "../../ImageUploader";
-import MultipleImageUploader from "../../MultipleImageUploader";
+import MultipleImageUploader from "../../MediaUploader";
 import { FormSection } from "../FormSection";
 
 interface ProductImagesProps {

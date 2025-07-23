@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
  
+
 import { Product } from "@/types/product";
 import ProductForm from "@/components/admin/ProductForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +23,7 @@ import {
 import {
   fetchCategoriesFromPostgres
 } from '@/data/products/postgres/categoryApi';
+import { API_BASE_URL } from "@/types/variables";
 
 interface Order {
   id: string;
@@ -39,7 +41,8 @@ const AdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
-
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [activeTab, setActiveTab] = useState<string>("active");
@@ -59,7 +62,7 @@ const AdminProducts = () => {
     price: 0,
     category: "",
     imageUrl: "/placeholder.svg",
-    additionalImages: [],
+    additional_images: [],
     rating: 5,
     inStock: true,
     countryOfOrigin: "Россия",
@@ -111,24 +114,109 @@ const AdminProducts = () => {
     }
   }
 
-  // Сохранение товара (добавление/редактирование)
-  const handleSaveProduct = async (formData: Partial<Product>) => {
-    setIsLoading(true);
-    try {
-      await addOrUpdateProduct(formData as Product);
-      toast.success(formData.id ? 'Товар обновлен' : 'Товар добавлен');
-      setShowForm(false);
-      setEditingProduct(null);
-      await refreshProductsList();
-    } catch (error) {
-      toast.error('Ошибка при сохранении товара', {
-        description: error instanceof Error ? error.message : 'Неизвестная ошибка',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const uploadFiles = async (files: File[]): Promise<string[]> => {
+  if (!files || files.length === 0) return [];
 
+  // Создаем массив промисов для параллельного выполнения
+  const uploadPromises = files.map(file => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return fetch(`${API_BASE_URL}/upload`, {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} for ${file.name}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (!data.success || !data.filename) {
+          throw new Error(`Сервер не вернул имя файла для ${file.name}`);
+        }
+        return data.filename;
+      })
+      .catch(error => {
+        console.error(`Ошибка загрузки файла ${file.name}:`, error);
+        throw new Error(`Не удалось загрузить файл: ${file.name}`);
+      });
+  });
+
+  return Promise.all(uploadPromises);
+};
+
+const handleSaveProduct = async (productData: Partial<Product>) => {
+  setIsLoading(true);
+
+  try {
+    // 1. Собираем все файлы для загрузки
+    const filesToUpload: File[] = [];
+    
+    // Главное изображение
+    const mainImageFile = productData.imageUrl instanceof File 
+      ? productData.imageUrl 
+      : null;
+    
+    if (mainImageFile) {
+      filesToUpload.push(mainImageFile);
+    }
+    
+    // Дополнительные изображения
+    const additionalFiles = (productData.additional_images || [])
+      .filter((img): img is File => img instanceof File);
+    
+    if (additionalFiles.length > 0) {
+      filesToUpload.push(...additionalFiles);
+    }
+    
+    // 2. Параллельная загрузка всех файлов
+    const uploadedFilenames = filesToUpload.length > 0
+      ? await uploadFiles(filesToUpload)
+      : [];
+    
+    // 3. Создаем карту соответствия File -> Имя файла
+    const fileToFilenameMap = new Map<File, string>();
+    filesToUpload.forEach((file, index) => {
+      fileToFilenameMap.set(file, uploadedFilenames[index]);
+    });
+
+    // 4. Обновляем пути изображений
+    const updatedImageUrl = mainImageFile
+      ? fileToFilenameMap.get(mainImageFile) || productData.imageUrl
+      : productData.imageUrl;
+    
+    const updatedAdditionalImages = (productData.additional_images || []).map(img => 
+      img instanceof File 
+        ? fileToFilenameMap.get(img) || '' 
+        : img
+    ).filter(Boolean) as string[];
+
+    // 5. Сохраняем товар
+    await addOrUpdateProduct({
+      ...productData,
+      imageUrl: updatedImageUrl,
+      additional_images: updatedAdditionalImages
+    } as Product);
+
+    // 6. Уведомление и обновление
+    toast.success(productData.id ? 'Товар обновлен' : 'Товар добавлен');
+    setShowForm(false);
+    setEditingProduct(null);
+    await refreshProductsList();
+  } catch (error) {
+    console.error('Ошибка сохранения товара:', error);
+    toast.error('Ошибка при сохранении товара', {
+      description: error instanceof Error ? error.message : 'Неизвестная ошибка',
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+ 
+  
   // Архивировать товар
   const handleArchiveProduct = async (productId: string) => {
     setIsLoading(true);

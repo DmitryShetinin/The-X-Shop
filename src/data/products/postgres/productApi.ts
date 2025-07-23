@@ -36,6 +36,7 @@ export const getProductsByCategoryFromPostgres = async (category: string): Promi
 
 // Добавить или обновить товар
 export const addOrUpdateProduct = async (product: Product): Promise<Product> => {
+ 
   const method = product.id ? 'PUT' : 'POST';
   const url = product.id ? `${API_BASE_URL}/products/${product.id}` : `${API_BASE_URL}/products`;
   const response = await fetch(url, {

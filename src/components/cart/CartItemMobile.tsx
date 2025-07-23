@@ -39,7 +39,7 @@ const CartItemMobile = ({ item, updateQuantity, removeItem }: CartItemMobileProp
     <div className="border-t py-4 flex flex-col gap-4">
       <div className="flex items-center gap-4">
         <img
-          src={item.product.imageUrl}
+          src={`images/${item.product.image_url}` || 'not-found.jpg'}
           alt={item.product.title}
           className="w-20 h-20 object-cover rounded"
         />

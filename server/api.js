@@ -15,7 +15,7 @@ const app = express();
 const port = 3001;
 const server = http.createServer(app);
 
-const imagesDir = path.join(__dirname, '../public/images'); // ← ключевое изменение!
+const imagesDir = path.join(__dirname, '../public/images');  
 if (!fs.existsSync(imagesDir)) {
   fs.mkdirSync(imagesDir, { recursive: true });
 }
@@ -530,9 +530,9 @@ app.delete('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Получаем товар, чтобы узнать имя файла изображения
+    // Получаем товар, чтобы узнать имена файлов
     const productResult = await pool.query(
-      'SELECT image_url FROM products WHERE id = $1', 
+      'SELECT image_url, additional_images FROM products WHERE id = $1', 
       [id]
     );
     
@@ -540,24 +540,35 @@ app.delete('/api/products/:id', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
     
-    const imageUrl = productResult.rows[0].image_url;
+    const product = productResult.rows[0];
+    const imageUrl = product.image_url;
+    const additionalImages = product.additional_images || [];
     
     // Удаляем запись из БД
     await pool.query('DELETE FROM products WHERE id = $1', [id]);
     
-    // Удаляем файл изображения, если он существует
-    if (imageUrl) {
-      const imagePath = path.join(imagesDir, imageUrl);
+    // Функция для безопасного удаления файла
+    const deleteFileIfExists = async (filename) => {
+      if (!filename) return;
       
       try {
-        await fsp.unlink(imagePath);
-        console.log(`🗑️  Изображение удалено: ${imageUrl}`);
+        const filePath = path.join(imagesDir, filename);
+        await fsp.unlink(filePath);
+        console.log(`🗑️  Изображение удалено: ${filename}`);
       } catch (fileError) {
         // Игнорируем ошибку "файл не найден"
         if (fileError.code !== 'ENOENT') {
-          console.error(`⚠️ Ошибка удаления файла ${imageUrl}:`, fileError);
+          console.error(`⚠️ Ошибка удаления файла ${filename}:`, fileError);
         }
       }
+    };
+
+    // Удаляем основное изображение
+    await deleteFileIfExists(imageUrl);
+    
+    // Удаляем все дополнительные изображения
+    for (const img of additionalImages) {
+      await deleteFileIfExists(img);
     }
     
     res.json({ success: true });
@@ -701,59 +712,79 @@ app.delete('/api/categories/:id', async (req, res) => {
 });
  
 
+ 
+ 
+ 
 
+ 
+ 
 
+// Настройка хранилища Multer
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, imagesDir); // Сохраняем прямо в images
+  destination: (req, file, cb) => {
+    // Всегда используем imagesDir
+    cb(null, imagesDir);
   },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase();
-    
-    // 3. Генерация имени файла (уже хорошая реализация)
-    const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
-    cb(null, fileName);
+  filename: (req, file, cb) => {
+    // Генерируем уникальное имя файла с оригинальным расширением
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
   }
 });
 
-// Фильтр для изображений (оставляем как есть)
-const imageFileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/bmp',
-    'image/svg+xml'
-  ];
-  if (allowedTypes.includes(file.mimetype)) {
+// Фильтр файлов
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
     cb(null, true);
   } else {
-    cb(new Error('Недопустимый формат файла. Разрешены только изображения.'));
+    cb(new Error('Разрешены только изображения и видео!'), false);
   }
 };
 
-const upload = multer({ 
+const upload = multer({
   storage,
-  fileFilter: imageFileFilter,
-  limits: { fileSize: 20 * 1024 * 1024 } // 20 МБ
+  fileFilter,
+  limits: { 
+    fileSize: 500 * 1024 * 1024 // 500MB лимит 
+  }
 });
 
-// Endpoint для загрузки изображений
-app.post('/api/upload', upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Файл не загружен' });
+// Endpoint для загрузки файлов
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Файл не был загружен' 
+      });
+    }
+
+    // Формируем URL для доступа к файлу (относительный путь)
+    const fileUrl = `/images/${req.file.filename}`;
+
+    res.status(200).json({
+      success: true,
+      filename: req.file.filename,
+      url: fileUrl,
+      type: req.file.mimetype.startsWith('video/') ? 'video' : 'image'
+    });
+
+  } catch (error) {
+    console.error('Ошибка загрузки:', error);
+    
+    // Удаляем частично загруженный файл в случае ошибки
+    if (req.file) {
+      fs.unlink(req.file.path, (unlinkErr) => {
+        if (unlinkErr) console.error('Ошибка удаления файла:', unlinkErr);
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: 'Ошибка при загрузке файла',
+      details: process.env.NODE_ENV === 'development' ? error.message : null
+    });
   }
-  
-  // 4. Получаем ТОЛЬКО имя файла (без пути)
-  const fileName = req.file.filename; // например: "1623456789123-123456789.jpg"
-  
-  // 5. Здесь сохраняем fileName в БД
-  // Пример: await ImageModel.create({ filename: fileName });
-  
-  // 6. Возвращаем только имя файла (или относительный путь)
-  res.json({ url: `${fileName}` }); // или просто fileName, если путь известен на клиенте
 });
 
 app.get('/api/chat/:userId/history', async (req, res) => {
@@ -775,25 +806,36 @@ app.get('/api/chat/:userId/history', async (req, res) => {
 });
 
 // Отправка сообщения
-app.post('/api/chat/:userId/send', async (req, res) => {
+app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
-    const { userId } = req.params;
-    const { text, senderId } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ error: 'Файл не был загружен' });
+    }
 
-    // Если senderId не передан — значит это пользователь, иначе админ
-    const actualSenderId = senderId || userId;
+    // Проверяем, что файл действительно сохранен
+    const filePath = path.join(imagesDir, req.file.filename);
+    if (!fs.existsSync(filePath)) {
+      throw new Error('Файл не был сохранен на сервере');
+    }
 
-    const result = await pool.query(
-      `INSERT INTO messages (user_id, sender_id, text) 
-       VALUES ($1, $2, $3) 
-       RETURNING id, sender_id AS "senderId", text, created_at AS "createdAt"`,
-      [userId, actualSenderId, text]
-    );
-
-    res.json(result.rows[0]);
+    // Возвращаем только имя файла
+    res.status(200).json({ 
+      success: true,
+      filename: req.file.filename
+    });
+    
   } catch (error) {
-    console.error('Error sending message:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Ошибка загрузки:', error);
+    
+    // Удаляем файл, если он был частично загружен
+    if (req.file) {
+      fs.unlink(path.join(imagesDir, req.file.filename), () => {});
+    }
+    
+    res.status(500).json({ 
+      error: 'Ошибка при загрузке файла',
+      details: error.message
+    });
   }
 });
 
@@ -934,8 +976,12 @@ wss.on('connection', (ws, req) => {
   });
 });
 
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date() });
+});
 
-server.listen(port, () => {
+
+server.listen(port, '0.0.0.0', () => {
   console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
   console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
   console.log(`🚀 HTTP сервер работает на http://localhost:${port}`);

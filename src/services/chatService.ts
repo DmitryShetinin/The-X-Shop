@@ -145,7 +145,7 @@ export const sendToTelegram = async (response: any): Promise<boolean> => {
       console.error("Ошибка при отправке уведомления:", error);
       return false;
   }
-};
+}; 
 
 export const sendTelegramMessage = async (
   message: string,

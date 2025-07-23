@@ -1,5 +1,6 @@
 
 import React from 'react';
+import  Carousel  from '../ui/mainCarousel.tsx';
 import { Product } from "@/types/product";
 import ProductMicrodata from "@/components/seo/ProductMicrodata";
 import ProductHeader from "@/components/products/ProductHeader";
@@ -21,6 +22,22 @@ interface ProductDetailContainerProps {
   currentProductId?: string;
 }
 
+const isVideo = (url: string) => /\.(mp4|webm|mov|avi)$/i.test(url);
+
+const prepareMediaForCarousel = (mediaUrls: string[]) => {
+  return mediaUrls.map(url => {
+    const isVideoFile = isVideo(url);
+    const filename = url.split('/').pop()?.trim() || ''; // Удаляем пробелы в конце, если есть
+    
+    return {
+      type: isVideoFile ? 'video' : 'image',
+      mediaUrl: url,
+      thumbnailUrl: url, // Используем тот же URL для миниатюры
+    };
+  });
+};
+
+
 const ProductDetailContainer: React.FC<ProductDetailContainerProps> = ({
   product,
   relatedProducts,
@@ -34,7 +51,13 @@ const ProductDetailContainer: React.FC<ProductDetailContainerProps> = ({
   onQuantityChange,
   currentProductId
 }) => {
- 
+   const localMedia = [
+    `/images/${product.imageUrl}`,
+    "/images/00099aa0-4965-4836-89c9-6a5533fe4e4e.png",
+    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  ];
+console.log("selectedColor")
+  console.log(selectedColor)
   return (
     <main className="flex-grow container px-4 py-8 md:px-6" itemScope itemType="https://schema.org/Product">
       {/* Основные Schema.org атрибуты для товара */}
@@ -45,7 +68,7 @@ const ProductDetailContainer: React.FC<ProductDetailContainerProps> = ({
       <meta itemProp="mpn" content={displayArticleNumber || product.id} />
       <meta itemProp="category" content={product.category} />
       
-
+    
     
 
       {/* Бренд */}
@@ -105,6 +128,14 @@ const ProductDetailContainer: React.FC<ProductDetailContainerProps> = ({
         onQuantityChange={onQuantityChange}
       />
     
+      <Carousel 
+ 
+          product={product} 
+          quantity={quantity}
+          onQuantityChange={onQuantityChange}
+          selectedColor={selectedColor}
+      />
+
 
       {/* Product description */}
       <div itemProp="description">

@@ -61,19 +61,53 @@ export function useProductForm({ product, onSave }: UseProductFormProps) {
     }));
   };
 
-  const handleMainImageUploaded = (url: string) => {
-    setFormData({
-      ...formData,
-      imageUrl: url
-    });
+ 
+  const handleMainImageUploaded = (files: File[]) => {
+    setFormData(prev => ({
+      ...prev,
+      additional_images: files
+    }));
   };
 
-  const handleAdditionalImagesChange = (urls: string[]) => {
+const handleAdditionalImagesChange = (files: (File | string)[]) => {
+  if (files.length === 0) {
     setFormData({
       ...formData,
-      additionalImages: urls
+      imageUrl: null,
+      additional_images: []
     });
+    return;
+  }
+
+  // Функция для генерации уникального имени только для новых файлов
+  const generateUniqueName = (file: File) => {
+    const extension = file.name.split('.').pop() || '';
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 11);
+    return `${timestamp}_${randomString}.${extension}`;
   };
+
+  // Обрабатываем каждый элемент: для File генерируем новое имя, для string оставляем как есть
+  const processedFiles = files.map(item => {
+    if (typeof item === 'string') {
+      // Уже существующий URL - возвращаем как есть
+      return item;
+    } else {
+      // Новый файл - генерируем уникальное имя
+      const newName = generateUniqueName(item);
+      return new File([item], newName, {
+        type: item.type,
+        lastModified: item.lastModified
+      });
+    }
+  });
+
+  setFormData({
+    ...formData,
+    imageUrl: processedFiles[0],
+    additional_images: processedFiles.slice(1)
+  });
+};
 
   const handleColorVariantsChange = (variants: ColorVariant[]) => {
     setFormData({

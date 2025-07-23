@@ -71,8 +71,8 @@ const Cart = () => {
   };
   
   const handleCheckout = async (formData) => {
- 
-  
+    console.log("user")
+    console.log(user)
     if (items.length === 0) {
       toast({
         title: "Ошибка",
@@ -95,7 +95,7 @@ const Cart = () => {
     
     // Create order data object
     const orderData = {
-      user_id: user.id.toString(),
+      user_id: user ? user.id.toString() : null,
       items,
       total,
       delivery_method: deliveryMethod.id,
@@ -161,7 +161,7 @@ const Cart = () => {
       });
       // Перенаправляем после небольшой задержки для чтения сообщения
  
-     // sendOrderNotification(result)
+ 
       navigate("/thankYou");
   
  

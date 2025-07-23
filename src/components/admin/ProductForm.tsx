@@ -7,6 +7,7 @@ import GeneralInfoTab from "./product-form/GeneralInfoTab";
 import AdditionalInfoTab from "./product-form/AdditionalInfoTab";
 import {ProductPricing} from "./product-form/sections/ProductPricing"; // Import ProductPricing
 import { useProductForm } from "@/hooks/useProductForm";
+import MediaUploader from "./MediaUploader";
  
  
 
@@ -29,13 +30,14 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
     handleInputChange,
     handleCheckboxChange,
     handleSelectChange,
-    handleMainImageUploaded,
+ 
     handleAdditionalImagesChange,
     validateAndSubmitForm: baseValidateAndSubmitForm,
     setNewCategory,
     setShowNewCategoryInput,
     handleStockQuantityChange
   } = useProductForm( {product, onSave} );
+  
   
   // Handle stock quantity change, pass it down to ProductPricing
  
@@ -73,11 +75,11 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
             handleInputChange={handleInputChange}
             handleSelectChange={handleSelectChangeAdapter} // Use the adapter function here
             handleCheckboxChange={handleCheckboxChangeAdapter} // Use the adapter function here
-            handleMainImageUploaded={handleMainImageUploaded}
-            handleAdditionalImagesChange={handleAdditionalImagesChange}
+ 
             onMainImageFileSelected={handleMainImageFileSelected}
             handleStockQuantityChange={handleStockQuantityChange}
           />
+          <MediaUploader formData={formData}   onChange={handleAdditionalImagesChange} /> 
         </TabsContent>
 
         <TabsContent value="additional" className="pt-4">
