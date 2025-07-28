@@ -3,9 +3,9 @@ import { API_BASE_URL } from '@/types/variables';
  
 
 // Получить все товары из API
-export const fetchProductsFromPostgres = async (): Promise<Product[]> => {
+export const fetchProductsFromPostgres = async (flag: string = 'true'): Promise<Product[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/products`);
+    const response = await fetch(`${API_BASE_URL}/products?includeArchived=${flag}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

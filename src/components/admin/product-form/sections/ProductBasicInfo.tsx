@@ -15,6 +15,7 @@ interface ProductBasicInfoProps {
   showNewCategoryInput: boolean;
   newCategory: string;
   setNewCategory: (value: string) => void;
+  setColor: (value: string) => void;
   setShowNewCategoryInput: (value: boolean) => void;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (value: string, name: string) => void;
@@ -27,6 +28,7 @@ export const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
   newCategory,
   setNewCategory,
   setShowNewCategoryInput,
+  setColor,
   handleInputChange,
   handleSelectChange
 }) => {
@@ -56,6 +58,17 @@ export const ProductBasicInfo: React.FC<ProductBasicInfoProps> = ({
         />
       </FormRow>
 
+      <FormRow label="Цвет*" htmlFor="color">
+        <Input
+          id="color"
+          name="color"
+          value={formData.color || ""}
+          onChange={(e) => setColor(e.target.value)}
+          required
+          placeholder="Введите название цвета"
+          className="w-full"
+        />
+      </FormRow>
       <FormRow label="Категория*" htmlFor="category">
         {showNewCategoryInput ? (
           <div className="flex gap-2">

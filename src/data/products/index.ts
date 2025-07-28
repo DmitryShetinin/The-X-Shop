@@ -27,9 +27,9 @@ export const getCategoryProducts = getProductsByCategoryFromCategoryData;
 export const getActiveProducts = async (): Promise<Product[]> => {
   console.log('📦 getActiveProducts: Loading from PostgreSQL');
   try {
-    const products = await fetchProductsFromPostgres();
+    const products = await fetchProductsFromPostgres('false');
     console.log(`✅ getActiveProducts: PostgreSQL returned ${products.length} products`);
-    return products;
+    return products.filter(product => !product.archived);
   } catch (error) {
     console.error('❌ getActiveProducts: Error with PostgreSQL:', error);
     throw new Error('Не удалось загрузить товары из PostgreSQL');

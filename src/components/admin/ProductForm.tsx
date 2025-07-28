@@ -30,7 +30,7 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
     handleInputChange,
     handleCheckboxChange,
     handleSelectChange,
- 
+    setColor,
     handleAdditionalImagesChange,
     validateAndSubmitForm: baseValidateAndSubmitForm,
     setNewCategory,
@@ -75,7 +75,7 @@ const ProductForm = ({ product, categories, onSave, onCancel }: ProductFormProps
             handleInputChange={handleInputChange}
             handleSelectChange={handleSelectChangeAdapter} // Use the adapter function here
             handleCheckboxChange={handleCheckboxChangeAdapter} // Use the adapter function here
- 
+            setColor={setColor}
             onMainImageFileSelected={handleMainImageFileSelected}
             handleStockQuantityChange={handleStockQuantityChange}
           />

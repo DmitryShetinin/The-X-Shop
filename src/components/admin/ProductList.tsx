@@ -32,8 +32,13 @@ const ProductList = ({
   onSelectAll
 }: ProductListProps) => {
   const [sortField, setSortField] = useState<SortField>("title");
+  const [productList, setProductsList] = useState([]);
+
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  
+ 
+
+
+
   // Sort products based on the selected field and direction
   const sortedProducts = [...products].sort((a, b) => {
     let aValue, bValue;

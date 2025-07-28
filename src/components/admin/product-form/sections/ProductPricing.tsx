@@ -99,7 +99,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({
           <div className="flex items-center space-x-2">
             <Checkbox
               id="inStock"
-              checked={formData.inStock ?? isInStock}
+              checked={isInStock}
               onCheckedChange={(checked) => handleCheckboxChange(!!checked, "inStock")}
               disabled={true}
             />

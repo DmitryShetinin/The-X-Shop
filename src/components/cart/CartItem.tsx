@@ -46,7 +46,7 @@ const CartItem = ({ item, updateQuantity, removeItem }: CartItemProps) => {
       <td className="p-4">
         <div className="flex items-center gap-4">
           <img 
-            src={`images/${item.product.image_url}` || 'not-found.jpg'}
+            src={`images/${item.product.image_url  }` || 'not-found.jpg'}
             alt={item.product.title} 
             className="w-16 h-16 object-cover rounded" 
           />

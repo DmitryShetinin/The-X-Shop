@@ -96,23 +96,24 @@ const AdminProducts = () => {
 
   // Функция для обновления списка товаров и категорий
   async function refreshProductsList() {
-    try {
-      const allProducts = await fetchProductsFromPostgres();
-  
-      if (activeTab === 'active') {
-        setProductsList(allProducts.filter(product => !product.archived));
-      } else {
-        setProductsList(allProducts.filter(product => product.archived));
-      }
-      const categoriesData = await fetchCategoriesFromPostgres();
-      setCategories(categoriesData.map(cat => cat.name));
-    } catch (error) {
-      console.error('Ошибка обновления списка товаров:', error);
-      toast.error('Ошибка загрузки данных', {
-        description: error instanceof Error ? error.message : 'Неизвестная ошибка',
-      });
-    }
+  try {
+    // Загружаем только нужные товары в зависимости от активной вкладки
+    const activeProducts = await fetchProductsFromPostgres('false');
+    const archivedProducts = await fetchProductsFromPostgres('true').then(products => 
+      products.filter(p => p.archived)
+    );
+    
+    setProductsList([...activeProducts, ...archivedProducts]);
+    
+    const categoriesData = await fetchCategoriesFromPostgres();
+    setCategories(categoriesData.map(cat => cat.name));
+  } catch (error) {
+    console.error('Ошибка обновления списка товаров:', error);
+    toast.error('Ошибка загрузки данных', {
+      description: error instanceof Error ? error.message : 'Неизвестная ошибка',
+    });
   }
+}
 
 const uploadFiles = async (files: File[]): Promise<string[]> => {
   if (!files || files.length === 0) return [];
@@ -348,18 +349,24 @@ const handleSaveProduct = async (productData: Partial<Product>) => {
 
   // Filter products based on search term and category
   const filteredProducts = productsList.filter((product) => {
-    const matchesSearch = 
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.articleNumber && product.articleNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (product.barcode && product.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (product.modelName && product.modelName.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Проверка соответствия вкладке
+  const matchesTab = 
+    (activeTab === "active" && !product.archived) || 
+    (activeTab === "archived" && product.archived);
 
-    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+  // Остальные условия фильтрации
+  const matchesSearch = 
+    product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.articleNumber && product.articleNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (product.barcode && product.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (product.modelName && product.modelName.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    return matchesSearch && matchesCategory;
-  });
+  const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+
+  return matchesTab && matchesSearch && matchesCategory;
+});
 
   return (
     <div className="space-y-6">

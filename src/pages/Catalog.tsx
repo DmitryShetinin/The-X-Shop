@@ -5,8 +5,7 @@ import CatalogLayout from "@/components/catalog/CatalogLayout";
 import CatalogFilters from "@/components/catalog/CatalogFilters";
 import CatalogProductsSection from "@/components/catalog/CatalogProductsSection";
 import { SEOHead } from "@/components/seo/SEOHead";
-import { Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
+ 
 import { useCatalogData } from "@/hooks/useCatalogData";
 import { useProductFiltering } from "@/hooks/useProductFiltering";
 import { useActiveFilters } from "@/hooks/useCatalog/useActiveFilters";
@@ -20,7 +19,7 @@ const Catalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get("category");
   const { allProducts, availableCategories, categoryObjects, loading } = useCatalogData(categoryParam);
-  console.log(allProducts)
+ 
   // Вычисляем максимальную цену среди всех товаров
   const allPrices = allProducts.map(p => p.discountPrice || p.price || 0);
   // const maxAllowedPrice = allPrices.length ? Math.max(...allPrices) : 100000;

@@ -122,9 +122,17 @@ console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
 // Get all products
 app.get('/api/products', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM products WHERE archived = false');
+    const { includeArchived } = req.query;
+    
+    // Правильно обрабатываем строковые значения
+    const showArchived = includeArchived === 'true';
+    
+    const query = showArchived 
+      ? 'SELECT * FROM products' 
+      : 'SELECT * FROM products WHERE archived = false';
+    
+    const result = await pool.query(query);
     const parsedProducts = result.rows.map(parseProductRow);
-    console.log(`✅ API: Loaded ${parsedProducts.length} products`);
     res.json(parsedProducts);
   } catch (error) {
     console.error('❌ API: Error loading products:', error);
@@ -203,6 +211,112 @@ app.get('/api/users/count', async (req, res) => {
   } catch (error) {
     console.error('❌ API: Error loading total users count:', error);
     res.status(500).json({ error: 'Failed to load total users count' });
+  }
+});
+
+// Массовое удаление товаров с удалением изображений
+app.post('/api/products/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids required' });
+    }
+    
+    // Получаем все изображения для удаляемых товаров
+    const imagesResult = await pool.query(
+      'SELECT image_url FROM products WHERE id = ANY($1)',
+      [ids]
+    );
+    
+    // Удаляем записи из БД
+    await pool.query('DELETE FROM products WHERE id = ANY($1)', [ids]);
+    
+    // Удаляем файлы изображений
+    for (const row of imagesResult.rows) {
+      if (row.image_url) {
+        try {
+          const imagePath = path.join(imagesDir, row.image_url);
+          await fsp.unlink(imagePath);
+          console.log(`🗑️  Изображение удалено: ${row.image_url}`);
+        } catch (fileError) {
+          if (fileError.code !== 'ENOENT') {
+            console.error(`⚠️ Ошибка удаления файла ${row.image_url}:`, fileError);
+          }
+        }
+      }
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ API: Error bulk deleting products:', error);
+    res.status(500).json({ error: 'Ошибка при массовом удалении товаров' });
+  }
+});
+
+
+// Архивировать/восстановить товар
+app.patch('/api/products/:id/archive', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { archived } = req.body;
+    const result = await pool.query('UPDATE products SET archived = $1 WHERE id = $2 RETURNING *', [archived, id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json(parseProductRow(result.rows[0]));
+  } catch (error) {
+    console.error('❌ API: Error archiving/restoring product:', error);
+    res.status(500).json({ error: 'Ошибка при архивировании/восстановлении товара' });
+  }
+});
+
+ 
+
+// Массовая архивация/восстановление товаров
+app.post('/api/products/bulk-archive', async (req, res) => {
+  try {
+    const { ids, archive } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids required' });
+    await pool.query('UPDATE products SET archived = $1 WHERE id = ANY($2)', [archive, ids]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ API: Error bulk archiving/restoring products:', error);
+    res.status(500).json({ error: 'Ошибка при массовой архивации/восстановлении товаров' });
+  }
+});
+
+// Массовое объединение товаров по modelName
+app.post('/api/products/bulk-merge', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    // Проверка входных данных
+    if (!Array.isArray(ids) || ids.length < 2) {
+      return res.status(400).json({ error: 'Минимум два товара для объединения' });
+    }
+    
+    // Проверка что все ID являются валидными UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    for (const id of ids) {
+      if (!uuidRegex.test(id)) {
+        return res.status(400).json({ error: `Неверный формат ID: ${id}` });
+      }
+    }
+
+    const { v4: uuidv4 } = require('uuid');
+    const modelName = `model_${uuidv4()}`;
+    
+    // Обновляем model_name для выбранных товаров
+    await pool.query('UPDATE products SET model_name = $1 WHERE id = ANY($2)', [modelName, ids]);
+    
+    // Архивируем все кроме первого
+    const [mainId, ...archiveIds] = ids;
+    if (archiveIds.length > 0) {
+      await pool.query('UPDATE products SET archived = true WHERE id = ANY($1)', [archiveIds]);
+    }
+    
+    res.json({ success: true, modelName });
+  } catch (error) {
+    console.error('❌ API: Error merging products:', error);
+    res.status(500).json({ error: 'Ошибка при объединении товаров' });
   }
 });
 
@@ -438,40 +552,51 @@ app.post('/api/products', async (req, res) => {
     const product = req.body;
     const { v4: uuidv4 } = require('uuid');
     const id = product.id || uuidv4();
+    
     const insertQuery = `
       INSERT INTO products (
-        id, title, description, price, discount_price, category, image_url, additional_images, rating, in_stock, colors, sizes, country_of_origin, specifications, is_new, is_bestseller, article_number, barcode, stock_quantity, color_variants, archived, video_url, video_type, material, model_name
+        id, title, description, price, discount_price, category, image_url, 
+        additional_images, rating, in_stock, color, sizes, material,
+        country_of_origin, specifications, is_new, is_bestseller, article_number, 
+        barcode, ozon_url, wildberries_url, avito_url, archived, stock_quantity, 
+        video_url, video_type, wildberries_sku, model_id
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 
+        $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28
       ) RETURNING *
     `;
+    
     const values = [
       id,
       product.title,
       product.description,
       product.price,
-      product.discountPrice || product.discount_price,
+      product.discountPrice || product.discount_price || null,
       product.category,
-      product.imageUrl || product.image_url,
+      product.imageUrl || product.image_url || '/placeholder.svg',
       JSON.stringify(product.additionalImages || product.additional_images || []),
-      product.rating,
+      product.rating || 4.8,
       product.inStock !== undefined ? product.inStock : true,
-      JSON.stringify(product.colors || []),
+      product.color || null,
       JSON.stringify(product.sizes || []),
-      product.countryOfOrigin || product.country_of_origin,
+      product.material || null,
+      product.countryOfOrigin || product.country_of_origin || '',
       JSON.stringify(product.specifications || {}),
       product.isNew || false,
       product.isBestseller || false,
-      product.articleNumber || product.article_number,
-      product.barcode,
-      product.stockQuantity || product.stock_quantity || 0,
-      JSON.stringify(product.colorVariants || product.color_variants || []),
+      product.articleNumber || product.article_number || null,
+      product.barcode || null,
+      product.ozonUrl || product.ozon_url || null,
+      product.wildberriesUrl || product.wildberries_url || null,
+      product.avitoUrl || product.avito_url || null,
       product.archived || false,
-      product.videoUrl || '',
-      product.videoType || '',
-      product.material || '',
-      product.modelName || ''
+      product.stockQuantity || product.stock_quantity || null,
+      product.videoUrl || null,
+      product.videoType || null,
+      product.wildberriesSku || product.wildberries_sku || null,
+      product.modelId || product.model_id || null
     ];
+    
     const result = await pool.query(insertQuery, values);
     res.status(201).json(parseProductRow(result.rows[0]));
   } catch (error) {
@@ -485,38 +610,74 @@ app.put('/api/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const product = req.body;
+    
     const updateQuery = `
       UPDATE products SET
-        title = $2, description = $3, price = $4, discount_price = $5, category = $6, image_url = $7, additional_images = $8, rating = $9, in_stock = $10, colors = $11, sizes = $12, country_of_origin = $13, specifications = $14, is_new = $15, is_bestseller = $16, article_number = $17, barcode = $18, stock_quantity = $19, color_variants = $20, archived = $21, video_url = $22, video_type = $23, material = $24, model_name = $25
-      WHERE id = $1 RETURNING *
+        title = $2,
+        description = $3,
+        price = $4,
+        discount_price = $5,
+        category = $6,
+        image_url = $7,
+        additional_images = $8,
+        rating = $9,
+        in_stock = $10,
+        color = $11,
+        sizes = $12,
+        material = $13,
+        country_of_origin = $14,
+        specifications = $15,
+        is_new = $16,
+        is_bestseller = $17,
+        article_number = $18,
+        barcode = $19,
+        ozon_url = $20,
+        wildberries_url = $21,
+        avito_url = $22,
+        archived = $23,
+        stock_quantity = $24,
+        video_url = $25,
+        video_type = $26,
+        model_name = $27,
+        wildberries_sku = $28,
+        model_id = $29,
+        updated_at = now()
+      WHERE id = $1
+      RETURNING *
     `;
+    
     const values = [
       id,
       product.title,
       product.description,
       product.price,
-      product.discountPrice || product.discount_price,
+      product.discountPrice || product.discount_price || null,
       product.category,
-      product.imageUrl || product.image_url,
+      product.imageUrl || product.image_url || '/placeholder.svg',
       JSON.stringify(product.additionalImages || product.additional_images || []),
-      product.rating,
+      product.rating || 4.8,
       product.inStock !== undefined ? product.inStock : true,
-      JSON.stringify(product.colors || []),
+      product.color || null,
       JSON.stringify(product.sizes || []),
-      product.countryOfOrigin || product.country_of_origin,
+      product.material || null,
+      product.countryOfOrigin || product.country_of_origin || '',
       JSON.stringify(product.specifications || {}),
       product.isNew || false,
       product.isBestseller || false,
-      product.articleNumber || product.article_number,
-      product.barcode,
-      product.stockQuantity || product.stock_quantity || 0,
-      JSON.stringify(product.colorVariants || product.color_variants || []),
+      product.articleNumber || product.article_number || null,
+      product.barcode || null,
+      product.ozonUrl || product.ozon_url || null,
+      product.wildberriesUrl || product.wildberries_url || null,
+      product.avitoUrl || product.avito_url || null,
       product.archived || false,
-      product.videoUrl || '',
-      product.videoType || '',
-      product.material || '',
-      product.modelName || ''
+      product.stockQuantity || product.stock_quantity || null,
+      product.videoUrl || null,
+      product.videoType || null,
+      product.modelName || null,
+      product.wildberriesSku || product.wildberries_sku || null,
+      product.modelId || product.model_id || null
     ];
+    
     const result = await pool.query(updateQuery, values);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
     res.json(parseProductRow(result.rows[0]));
@@ -578,95 +739,66 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-// Массовое удаление товаров с удалением изображений
-app.post('/api/products/bulk-delete', async (req, res) => {
-  try {
-    const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ error: 'ids required' });
-    }
-    
-    // Получаем все изображения для удаляемых товаров
-    const imagesResult = await pool.query(
-      'SELECT image_url FROM products WHERE id = ANY($1)',
-      [ids]
-    );
-    
-    // Удаляем записи из БД
-    await pool.query('DELETE FROM products WHERE id = ANY($1)', [ids]);
-    
-    // Удаляем файлы изображений
-    for (const row of imagesResult.rows) {
-      if (row.image_url) {
-        try {
-          const imagePath = path.join(imagesDir, row.image_url);
-          await fsp.unlink(imagePath);
-          console.log(`🗑️  Изображение удалено: ${row.image_url}`);
-        } catch (fileError) {
-          if (fileError.code !== 'ENOENT') {
-            console.error(`⚠️ Ошибка удаления файла ${row.image_url}:`, fileError);
-          }
-        }
-      }
-    }
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('❌ API: Error bulk deleting products:', error);
-    res.status(500).json({ error: 'Ошибка при массовом удалении товаров' });
-  }
-});
-
-
-// Архивировать/восстановить товар
-app.patch('/api/products/:id/archive', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { archived } = req.body;
-    const result = await pool.query('UPDATE products SET archived = $1 WHERE id = $2 RETURNING *', [archived, id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
-    res.json(parseProductRow(result.rows[0]));
-  } catch (error) {
-    console.error('❌ API: Error archiving/restoring product:', error);
-    res.status(500).json({ error: 'Ошибка при архивировании/восстановлении товара' });
-  }
-});
-
  
 
-// Массовая архивация/восстановление товаров
-app.post('/api/products/bulk-archive', async (req, res) => {
+
+app.get('/api/product-models/:id/products', async (req, res) => {
   try {
-    const { ids, archive } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids required' });
-    await pool.query('UPDATE products SET archived = $1 WHERE id = ANY($2)', [archive, ids]);
-    res.json({ success: true });
+    const { id } = req.params;
+    
+    // Проверяем существование товара
+    const productCheck = await pool.query(
+      'SELECT model_name FROM products WHERE id = $1',
+      [id]
+    );
+    
+    if (productCheck.rowCount === 0) {
+      return res.status(404).json({ error: 'Товар не найден' });
+    }
+    
+    const modelName = productCheck.rows[0].model_name;
+    
+    if (!modelName) {
+      return res.json({ 
+        success: true, 
+        message: 'У товара нет связанной модели',
+        products: []
+      });
+    }
+    
+    // Получаем все товары модели с использованием индекса
+    const result = await pool.query(
+      `SELECT 
+        id,
+        title,
+        price,
+        discount_price,
+        image_url,
+        article_number,
+        color,
+	additional_images,
+        (id = $1) AS is_current
+       FROM products 
+       WHERE model_name = $2
+       ORDER BY 
+         is_current DESC, 
+         archived ASC, 
+         created_at DESC`,
+      [id, modelName]
+    );
+    
+    res.json({
+      success: true,
+      model_name: modelName,
+      products: result.rows
+    });
   } catch (error) {
-    console.error('❌ API: Error bulk archiving/restoring products:', error);
-    res.status(500).json({ error: 'Ошибка при массовой архивации/восстановлении товаров' });
+    console.error('❌ API: Error fetching model products:', error);
+    res.status(500).json({ error: 'Ошибка при получении товаров модели' });
   }
 });
 
-// Массовое объединение товаров по modelName
-app.post('/api/products/bulk-merge', async (req, res) => {
-  try {
-    const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length < 2) return res.status(400).json({ error: 'Минимум два товара для объединения' });
-    const { v4: uuidv4 } = require('uuid');
-    const modelName = `model_${uuidv4()}`;
-    await pool.query('UPDATE products SET model_name = $1 WHERE id = ANY($2)', [modelName, ids]);
-    // Архивируем все кроме первого
-    const mainId = ids[0];
-    const archiveIds = ids.slice(1);
-    if (archiveIds.length > 0) {
-      await pool.query('UPDATE products SET archived = true WHERE id = ANY($1)', [archiveIds]);
-    }
-    res.json({ success: true, modelName });
-  } catch (error) {
-    console.error('❌ API: Error merging products:', error);
-    res.status(500).json({ error: 'Ошибка при объединении товаров' });
-  }
-});
+
 
 // Создать категорию
 app.post('/api/categories', async (req, res) => {

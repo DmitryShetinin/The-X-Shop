@@ -109,20 +109,20 @@ const handleAdditionalImagesChange = (files: (File | string)[]) => {
   });
 };
 
-  const handleColorVariantsChange = (variants: ColorVariant[]) => {
+  const setColor = (variant: string) => {
     setFormData({
       ...formData,
-      colorVariants: variants
+      color: variant
     });
   };
 
   const handleRemoveColor = (colorToRemove: string) => {
     // Handling legacy colors array 
-    const updatedColors = formData.colors ? formData.colors.filter(color => color !== colorToRemove) : [];
+    const updatedColors = formData.color;
     
     setFormData({
       ...formData,
-      colors: updatedColors
+      color: updatedColors
     });
   };
 
@@ -153,20 +153,8 @@ const handleAdditionalImagesChange = (files: (File | string)[]) => {
       return false;
     }
     
-    // Check for duplicate article numbers in color variants
-    if (formData.colorVariants && formData.colorVariants.length > 0) {
-      const articleNumbers = formData.colorVariants
-        .map(v => v.articleNumber)
-        .filter(a => a && a.trim() !== "");
-      
-      const uniqueArticleNumbers = new Set(articleNumbers);
-      
-      if (articleNumbers.length !== uniqueArticleNumbers.size) {
-        toast.error("Найдены дублирующиеся артикулы в цветовых вариантах");
-        setActiveTab("colors");
-        return false;
-      }
-    }
+   
+    
     
     return true;
   };
@@ -174,8 +162,7 @@ const handleAdditionalImagesChange = (files: (File | string)[]) => {
   const handleStockQuantityChangeAdapter = (value: number | undefined) => {
   setFormData(prev => ({
     ...prev,
-    stockQuantity: value,
-    inStock: value !== undefined && value > 0
+    stockQuantity: value
   }));
 };
 
@@ -209,8 +196,6 @@ const handleAdditionalImagesChange = (files: (File | string)[]) => {
         category: showNewCategoryInput && newCategory ? newCategory : formData.category
       };
       
-      // Set inStock status based on stockQuantity
-      finalProduct.inStock = finalProduct.stockQuantity !== undefined && finalProduct.stockQuantity > 0;
       
       console.log("Submitting product with category:", finalProduct.category);
       await onSave(finalProduct);
@@ -235,7 +220,7 @@ const handleAdditionalImagesChange = (files: (File | string)[]) => {
     handleSelectChange,
     handleMainImageUploaded,
     handleAdditionalImagesChange,
-    handleColorVariantsChange,
+    setColor,
     handleRemoveColor,
     handleRelatedColorProductsChange,
     validateAndSubmitForm,

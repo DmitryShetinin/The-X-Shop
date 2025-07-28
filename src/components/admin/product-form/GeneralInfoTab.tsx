@@ -16,7 +16,7 @@ interface GeneralInfoTabProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (value: string, name: string) => void;
   handleCheckboxChange: (checked: boolean, name: string) => void;
- 
+  setColor: (value: string) => void; 
   onMainImageFileSelected?: (file: File | null) => void;
   handleStockQuantityChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -31,7 +31,7 @@ const GeneralInfoTab = ({
   handleInputChange,
   handleSelectChange,
   handleCheckboxChange,
- 
+  setColor,
   onMainImageFileSelected,
   handleStockQuantityChange
 }: GeneralInfoTabProps) => {
@@ -48,6 +48,7 @@ const GeneralInfoTab = ({
         setShowNewCategoryInput={setShowNewCategoryInput}
         handleInputChange={handleInputChange}
         handleSelectChange={handleSelectChange}
+        setColor={setColor}
       />
 
       {/* Product Pricing and Inventory */}

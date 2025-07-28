@@ -243,6 +243,7 @@ const ProductTabContent = ({
         <ProductList
           products={products}
           onEdit={onEdit} // Still pass onEdit for the edit button
+          
           onDelete={handleDeleteClick}
           deleteButtonText={deleteButtonText}
           deleteButtonColor={deleteButtonColor}

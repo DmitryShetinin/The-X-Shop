@@ -6,13 +6,10 @@ export interface Product {
   price: number;
   discountPrice?: number;
   category: string;
-  imageUrl: string;
+  image_url: string;
   additionalImages?: File[]; // Add support for multiple images
-  videoUrl?: string;
-  videoType?: 'mp4' | 'vk' | 'youtube';
   rating: number;
-  inStock: boolean;
-  colors?: string[];
+  color?: string;
   sizes?: string[];
   countryOfOrigin: string;
   specifications?: Record<string, string>;
@@ -25,7 +22,6 @@ export interface Product {
   avitoUrl?: string;
   archived?: boolean; // New field to mark archived products
   stockQuantity?: number; // New field to track inventory quantity
-  colorVariants?: ColorVariant[]; // New field to store color variants
   material?: string; // Added back the material field
   relatedColorProducts?: string[]; // IDs of related products that are color variants
   isColorVariant?: boolean; // Flag to indicate if this is a color variant of another product

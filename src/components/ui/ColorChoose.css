@@ -1,0 +1,201 @@
+.color-chooser {
+width: 100%;
+position: relative;
+max-width: 380px; /* Уменьшили максимальную ширину */
+}
+
+.color-selection {
+margin-bottom: 15px; /* Уменьшили отступ */
+position: relative;
+}
+
+.selected-color-display {
+display: flex;
+align-items: center;
+margin-bottom: 12px; /* Уменьшили отступ */
+font-size: 1.1rem; /* Уменьшили размер шрифта */
+font-weight: 700;
+color: #495057;
+padding: 8px 0; /* Уменьшили отступы */
+}
+
+.color-name-display {
+background: #4dabf7;
+color: white;
+padding: 4px 12px; /* Уменьшили отступы */
+border-radius: 8px;
+margin-left: 8px; /* Уменьшили отступ */
+font-weight: 600;
+font-size: 1rem; /* Уменьшили размер шрифта */
+}
+
+.color-options-container {
+overflow-x: hidden;
+padding-bottom: 10px; /* Уменьшили отступ */
+position: relative;
+scroll-behavior: smooth;
+}
+
+.color-options {
+display: flex;
+gap: 12px; /* Уменьшили расстояние между элементами */
+flex-wrap: nowrap;
+padding: 5px 5px 10px 5px; /* Уменьшили отступ */
+transition: transform 0.3s ease;
+}
+
+.color-option-container {
+display: flex;
+flex-direction: column;
+align-items: center;
+cursor: pointer;
+transition: transform 0.2s;
+flex: 0 0 auto;
+width: 85px; /* Уменьшили ширину */
+}
+
+.color-option-container:hover {
+transform: translateY(-4px); /* Уменьшили эффект */
+}
+
+.color-option-container.selected {
+transform: translateY(-4px); /* Уменьшили эффект */
+}
+
+.color-image {
+width: 75px; /* Уменьшили размер */
+height: 75px; /* Уменьшили размер */
+border-radius: 10px; /* Уменьшили скругление */
+overflow: hidden;
+border: 2px solid transparent; /* Уменьшили толщину границы */
+transition: all 0.3s ease;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Уменьшили тень */
+}
+
+.color-option-container.selected .color-image {
+border-color: #4dabf7;
+box-shadow: 0 6px 15px rgba(77, 171, 247, 0.4); /* Уменьшили тень */
+}
+
+.color-image img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+transition: transform 0.3s ease;
+}
+
+.color-option-container:hover .color-image img {
+transform: scale(1.05);
+}
+
+.color-name {
+margin-top: 8px; /* Уменьшили отступ */
+font-size: 0.85rem; /* Уменьшили размер шрифта */
+font-weight: 600;
+color: #495057;
+text-align: center;
+padding: 4px; /* Уменьшили отступы */
+background: #f8f9fa;
+border-radius: 5px; /* Уменьшили скругление */
+width: 100%;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.color-option-container.selected .color-name {
+background: #4dabf7;
+color: white;
+}
+
+.nav-buttons {
+display: flex;
+justify-content: center;
+gap: 15px; /* Уменьшили расстояние */
+margin-top: 12px; /* Уменьшили отступ */
+}
+
+.nav-button {
+width: 42px; /* Уменьшили размер */
+height: 42px; /* Уменьшили размер */
+border-radius: 50%;
+background: linear-gradient(135deg, #4dabf7, #339af0);
+color: white;
+border: none;
+font-size: 1.1rem; /* Уменьшили размер иконки */
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.3s ease;
+box-shadow: 0 4px 12px rgba(77, 171, 247, 0.4); /* Уменьшили тень */
+}
+
+.nav-button:hover:not(:disabled) {
+transform: scale(1.08); /* Уменьшили эффект */
+background: linear-gradient(135deg, #339af0, #228be6);
+box-shadow: 0 5px 15px rgba(77, 171, 247, 0.5); /* Уменьшили тень */
+}
+
+.nav-button:disabled,
+.nav-button:disabled:hover {
+background: #ced4da !important;
+cursor: not-allowed;
+transform: none;
+box-shadow: none;
+opacity: 0.6;
+}
+
+@media (max-width: 480px) {
+.color-chooser {
+    max-width: 100%; /* На мобилках занимает всю ширину */
+}
+
+.color-options-container {
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.color-options-container::-webkit-scrollbar {
+    display: none;
+}
+    
+.color-options {
+    min-width: max-content;
+    gap: 10px; /* Уменьшили расстояние на мобилках */
+}
+
+.color-option-container {
+    width: 75px; /* Уменьшили ширину на мобилках */
+}
+
+.color-image {
+    width: 70px; /* Уменьшили размер на мобилках */
+    height: 70px; /* Уменьшили размер на мобилках */
+}
+
+.nav-buttons {
+    display: none;
+}
+}
+
+ 
+
+ 
+
+/* Подсветка выбранного цвета */
+.color-option-container.selected {
+  border: 2px solid #3f51b5;
+  border-radius: 8px;
+}
+
+.color-name {
+  margin-top: 5px;
+  font-size: 12px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}

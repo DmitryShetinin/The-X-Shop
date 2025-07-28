@@ -276,8 +276,7 @@ const MediaUploader = ({ formData, onChange }: MediaUploaderProps): ReactElement
       )
     );
   };
-    console.log("files")
-  console.log(files)
+  
   return (
     <div className="container">
       <h1 className="title">Загрузка фото и видео</h1>
