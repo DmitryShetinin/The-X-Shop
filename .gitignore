@@ -29,4 +29,7 @@ dist-ssr
 .env
 
 # public
-./public/images/
+public/images/
+public/images/
+*.rar
+*.mp4
